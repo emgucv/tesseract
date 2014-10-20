@@ -37,8 +37,13 @@ using std::unordered_set;
 #elif (defined(__GNUC__) && (((__GNUC__ == 3) && (__GNUC_MINOR__ > 0)) || \
   __GNUC__ >= 4))  // gcc
 // hash_set is deprecated in gcc
+#if ANDROID
+#include <backward/hash_map>
+#include <backward/hash_set>
+#else
 #include <ext/hash_map>
 #include <ext/hash_set>
+#endif
 using __gnu_cxx::hash_map;
 using __gnu_cxx::hash_set;
 #define unordered_map hash_map
