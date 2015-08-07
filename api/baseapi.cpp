@@ -28,6 +28,7 @@
 
 #if defined(_WIN32)
 #ifdef _MSC_VER
+#include "vcsversion.h"
 #include "mathfix.h"
 #elif MINGW
 // workaround for stdlib.h with -std=c++11 for _splitpath and _MAX_FNAME
@@ -139,7 +140,7 @@ TessBaseAPI::~TessBaseAPI() {
  * Returns the version identifier as a static string. Do not delete.
  */
 const char* TessBaseAPI::Version() {
-#if defined(DEBUG) && defined(GIT_REV)
+#if defined(GIT_REV) && (defined(DEBUG) || defined(_DEBUG))
   return GIT_REV;
 #else
   return TESSERACT_VERSION_STR;
@@ -746,7 +747,7 @@ void TessBaseAPI::DumpPGM(const char* filename) {
   fclose(fp);
 }
 
-#ifndef ANDROID_BUILD
+#ifndef NO_CUBE_BUILD
 /**
  * Placeholder for call to Cube and test that the input data is correct.
  * reskew is the direction of baselines in the skewed image in
@@ -1028,7 +1029,7 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
                                             int timeout_millisec,
                                             TessResultRenderer* renderer,
                                             int tessedit_page_number) {
-#ifndef ANDROID_BUILD
+#ifndef NO_CUBE_BUILD
   Pix *pix = NULL;
 #ifdef USE_OPENCL
   OpenclDevice od;
@@ -1097,7 +1098,7 @@ bool TessBaseAPI::ProcessPagesInternal(const char* filename,
                                        const char* retry_config,
                                        int timeout_millisec,
                                        TessResultRenderer* renderer) {
-#ifndef ANDROID_BUILD
+#ifndef NO_CUBE_BUILD
   PERF_COUNT_START("ProcessPages")
   bool stdInput = !strcmp(filename, "stdin") || !strcmp(filename, "-");
   if (stdInput) {
@@ -1221,7 +1222,7 @@ bool TessBaseAPI::ProcessPage(Pix* pix, int page_index, const char* filename,
     failed = Recognize(NULL) < 0;
   }
   if (tesseract_->tessedit_write_images) {
-#ifndef ANDROID_BUILD
+#ifndef NO_CUBE_BUILD
     Pix* page_pix = GetThresholdedImage();
     pixWrite("tessinput.tif", page_pix, IFF_TIFF_G4);
 #endif
@@ -1489,8 +1490,10 @@ char* TessBaseAPI::GetHOCRText(int page_number) {
     hocr_str.add_str_int(" ", bottom);
     hocr_str.add_str_int("; x_wconf ", res_it->Confidence(RIL_WORD));
     if (font_info) {
-      hocr_str += "; x_font ";
-      hocr_str += HOcrEscape(font_name);
+      if (font_name) {
+        hocr_str += "; x_font ";
+        hocr_str += HOcrEscape(font_name);
+      }
       hocr_str.add_str_int("; x_fsize ", pointsize);
     }
     hocr_str += "'";
@@ -2379,7 +2382,8 @@ void TessBaseAPI::AdaptToCharacter(const char *unichar_repr,
   threshold = tesseract_->matcher_good_threshold;
 
   if (blob->outlines)
-    tesseract_->AdaptToChar(blob, id, kUnknownFontinfoId, threshold);
+    tesseract_->AdaptToChar(blob, id, kUnknownFontinfoId, threshold,
+                            tesseract_->AdaptedTemplates);
   delete blob;
 }
 
@@ -2629,7 +2633,7 @@ int TessBaseAPI::NumDawgs() const {
   return tesseract_ == NULL ? 0 : tesseract_->getDict().NumDawgs();
 }
 
-#ifndef ANDROID_BUILD
+#ifndef NO_CUBE_BUILD
 /** Return a pointer to underlying CubeRecoContext object if present. */
 CubeRecoContext *TessBaseAPI::GetCubeRecoContext() const {
   return (tesseract_ == NULL) ? NULL : tesseract_->GetCubeRecoContext();

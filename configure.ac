@@ -6,7 +6,7 @@
 # Initialization
 # ----------------------------------------
 AC_PREREQ(2.50)
-AC_INIT([tesseract], [3.04], [http://code.google.com/p/tesseract-ocr/issues/list])
+AC_INIT([tesseract], [3.05.00dev], [https://github.com/tesseract-ocr/tesseract/issues])
 CXXFLAGS=${CXXFLAGS:-""}
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(config)
@@ -15,9 +15,8 @@ AC_PREFIX_DEFAULT(/usr/local)
 
 # Define date of package, etc. Could be useful in auto-generated
 # documentation.
-# TODO(luc) Generate good documentation using doxygen or equivalent
-PACKAGE_YEAR=2014
-PACKAGE_DATE="08/13"
+PACKAGE_YEAR=2015
+PACKAGE_DATE="07/11"
 
 abs_top_srcdir=`AS_DIRNAME([$0])`
 gitrev="`git --git-dir=${abs_top_srcdir}/.git --work-tree=${abs_top_srcdir} describe --always --tags`"
@@ -69,6 +68,7 @@ AM_MAINTAINER_MODE
 
 # default conditional
 AM_CONDITIONAL(T_WIN, false)
+AM_CONDITIONAL(MINGW, false)
 AM_CONDITIONAL(OSX, false)
 AM_CONDITIONAL(GRAPHICS_DISABLED, false)
 
@@ -84,6 +84,7 @@ case "${host_os}" in
     mingw32*)
         AC_DEFINE_UNQUOTED(MINGW,1,[This is a MinGW system])
         AM_CONDITIONAL(T_WIN, true)
+        AM_CONDITIONAL(MINGW, true)
         AM_CONDITIONAL(ADD_RT, false)
         AC_SUBST([AM_LDFLAGS], ['-Wl,-no-undefined -Wl,--as-needed'])
         ;;
@@ -142,6 +143,17 @@ if test "$enable_graphics" = "no"; then
   AM_CONDITIONAL(GRAPHICS_DISABLED, true)
 fi
 
+# Check if cube should be disabled
+AC_MSG_CHECKING(whether to disable cube)
+AC_ARG_ENABLE([cube],
+  [AC_HELP_STRING([--disable-cube], [don't build cube support (experimental)])],
+    [disable_cube="yes"], [disable_cube="no"])
+AC_MSG_RESULT($disable_cube)
+AM_CONDITIONAL([NO_CUBE_BUILD], [test "$disable_cube" = "yes"])
+if test "$disable_cube" = "yes"; then
+  AC_SUBST([AM_CPPFLAGS], [-DNO_CUBE_BUILD])
+fi
+
 # check whether to build embedded version
 AC_MSG_CHECKING(--enable-embedded argument)
 AC_ARG_ENABLE([embedded],
@@ -161,12 +173,30 @@ AC_ARG_ENABLE([opencl],
     [enable_opencl=$enableval],
     [enable_opencl="no"])
 AC_MSG_RESULT($enable_opencl)
-AM_CONDITIONAL([USE_OPENCL], [test "$enable_opencl" = "yes"])
+# check for opencl header
+have_opencl=false
+AC_CHECK_HEADERS(CL/cl.h, have_opencl=true, [
+    AC_CHECK_HEADERS(OpenCL/cl.h, have_opencl=true, have_opencl=false)
+])
+have_opencl_lib=false
+AC_CHECK_LIB(OpenCL, clGetPlatformIDs, have_opencl_lib=true, have_opencl_lib=false)
+have_tiff=false
+AC_CHECK_HEADERS(tiffio.h, have_tiff=true, have_tiff=false)
 if test "$enable_opencl" = "yes"; then
-  AC_SUBST([AM_CPPFLAGS], [-DUSE_OPENCL])
-  AC_SUBST([OPENCL_HDR_PATH],[$OPENCL_INC])
-  AC_SUBST([OPENCL_LIB],[$OPENCL_LIBS])
+    if !($have_opencl); then
+        AC_MSG_ERROR(Required OpenCL headers not found!)
+    fi
+    if !($have_opencl_lib); then
+        AC_MSG_ERROR(Required OpenCL library not found!)
+    fi
+    if !($have_tiff); then
+        AC_MSG_ERROR(Required TIFF headers not found! Try to install libtiff-dev?? package.)
+    fi
+    AC_SUBST([AM_CPPFLAGS], [-DUSE_OPENCL])
+    AC_SUBST([OPENCL_HDR_PATH],[$OPENCL_INC])
+    AC_SUBST([OPENCL_LIB],[$OPENCL_LIBS])
 fi
+AM_CONDITIONAL([USE_OPENCL], [test "$enable_opencl" = "yes"])
 
 # check whether to build tesseract with -fvisibility=hidden -fvisibility-inlines-hidden
 # http://gcc.gnu.org/wiki/Visibility
@@ -192,7 +222,7 @@ AM_CONDITIONAL([USING_MULTIPLELIBS], [test "$enable_mlibs" = "yes"])
 AC_MSG_CHECKING(whether to use tessdata-prefix)
 AC_ARG_ENABLE(tessdata-prefix,
     [AC_HELP_STRING([--disable-tessdata-prefix],
-            [dont set TESSDATA-PREFIX during compile])],
+            [don't set TESSDATA-PREFIX during compile])],
     [tessdata_prefix="no"], [tessdata_prefix="yes"])
 AC_MSG_RESULT($tessdata_prefix)
 AM_CONDITIONAL([NO_TESSDATA_PREFIX], [test "$tessdata_prefix" = "no"])
@@ -435,7 +465,7 @@ if test "x$has_cpp11" = "xyes"; then
   esac
 else
   AC_MSG_WARN(Training tools WILL NOT be built because of missing c++11 support.)
-  AM_CONDITIONAL(ENABLE_TRAINING, false)
+  AM_CONDITIONAL(ENABLE_TRAINING, [test "x$has_cpp11" = "xyes"])
 fi
 
 # ----------------------------------------
