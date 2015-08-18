@@ -374,12 +374,14 @@ void TessBaseAPI::GetAvailableLanguagesAsVector(
 #ifdef _WIN32
     STRING pattern = tesseract_->datadir + "/*." + kTrainedDataSuffix;
     char fname[_MAX_FNAME];
+    char tmp[_MAX_FNAME];
     WIN32_FIND_DATA data;
     BOOL result = TRUE;
     HANDLE handle = FindFirstFile(pattern.string(), &data);
     if (handle != INVALID_HANDLE_VALUE) {
       for (; result; result = FindNextFile(handle, &data)) {
-        _splitpath(data.cFileName, NULL, NULL, fname, NULL);
+         wcstombs(tmp, data.cFileName, _MAX_FNAME);
+        _splitpath(tmp, NULL, NULL, fname, NULL);
         langs->push_back(STRING(fname));
       }
       FindClose(handle);
