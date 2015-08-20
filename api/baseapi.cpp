@@ -800,7 +800,7 @@ int CubeAPITest(Boxa* boxa_blocks, Pixa* pixa_blocks,
   ASSERT_HOST(pr_word == word_count);
   return 0;
 }
-#endif
+#endif  // NO_CUBE_BUILD
 
 /**
  * Runs page layout analysis in the mode set by SetPageSegMode.
@@ -1037,11 +1037,11 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
                                             int timeout_millisec,
                                             TessResultRenderer* renderer,
                                             int tessedit_page_number) {
-#ifndef NO_CUBE_BUILD
+#ifndef ANDROID_BUILD
   Pix *pix = NULL;
 #ifdef USE_OPENCL
   OpenclDevice od;
-#endif
+#endif  // USE_OPENCL
   int page = (tessedit_page_number >= 0) ? tessedit_page_number : 0;
   for (; ; ++page) {
     if (tessedit_page_number >= 0)
@@ -1051,11 +1051,11 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
       // FIXME(jbreiden) Not implemented.
       pix = od.pixReadMemTiffCl(data, size, page);
     } else {
-#endif
+#endif  // USE_OPENCL
       pix = pixReadMemTiff(data, size, page);
 #ifdef USE_OPENCL
     }
-#endif
+#endif  // USE_OPENCL
     if (pix == NULL) break;
     tprintf("Page %d\n", page + 1);
     char page_str[kMaxIntSize];
@@ -1106,7 +1106,7 @@ bool TessBaseAPI::ProcessPagesInternal(const char* filename,
                                        const char* retry_config,
                                        int timeout_millisec,
                                        TessResultRenderer* renderer) {
-#ifndef NO_CUBE_BUILD
+#ifndef ANDROID_BUILD
   PERF_COUNT_START("ProcessPages")
   bool stdInput = !strcmp(filename, "stdin") || !strcmp(filename, "-");
   if (stdInput) {
@@ -1230,10 +1230,10 @@ bool TessBaseAPI::ProcessPage(Pix* pix, int page_index, const char* filename,
     failed = Recognize(NULL) < 0;
   }
   if (tesseract_->tessedit_write_images) {
-#ifndef NO_CUBE_BUILD
+#ifndef ANDROID_BUILD
     Pix* page_pix = GetThresholdedImage();
     pixWrite("tessinput.tif", page_pix, IFF_TIFF_G4);
-#endif
+#endif  // ANDROID_BUILD
   }
   if (failed && retry_config != NULL && retry_config[0] != '\0') {
     // Save current config variables before switching modes.
@@ -2646,7 +2646,7 @@ int TessBaseAPI::NumDawgs() const {
 CubeRecoContext *TessBaseAPI::GetCubeRecoContext() const {
   return (tesseract_ == NULL) ? NULL : tesseract_->GetCubeRecoContext();
 }
-#endif
+#endif  // NO_CUBE_BUILD
 
 /** Escape a char string - remove <>&"' with HTML codes. */
 STRING HOcrEscape(const char* text) {

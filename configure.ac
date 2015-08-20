@@ -62,7 +62,8 @@ AC_SUBST(GENERIC_VERSION)
 # Automake configuration
 # ----------------------------------------
 
-AM_INIT_AUTOMAKE
+# Do not require README file (we use README.md)
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_HEADERS(config_auto.h:config/config.h.in)
 AM_MAINTAINER_MODE
 
@@ -165,6 +166,15 @@ AM_CONDITIONAL([EMBEDDED], [test "$enable_embedded" = "yes"])
 if test "$enable_embedded" = "yes"; then
   AC_SUBST([AM_CPPFLAGS], [-DEMBEDDED])
 fi
+
+# check whether to build OpenMP support
+AC_OPENMP
+AS_IF([test "x$OPENMP_CFLAGS" != "x"],
+  AM_CONDITIONAL([OPENMP], test "x$OPENMP_CFLAGS" != "x")
+  AC_SUBST(AM_CPPFLAGS,"$OPENMP_CXXFLAGS")
+  AC_DEFINE([OPENMP], [], [Defined when compiled with OpenMP support])
+)
+
 
 # check whether to build opencl version
 AC_MSG_CHECKING(--enable-opencl argument)
