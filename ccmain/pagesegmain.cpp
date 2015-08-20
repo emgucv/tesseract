@@ -275,7 +275,11 @@ int Tesseract::AutoPageSeg(PageSegMode pageseg_mode, BLOCK_LIST* blocks,
 
   if (textord_debug_images) {
     // The debug image is no longer needed so delete it.
+#ifdef WINAPI_FAMILY
     _unlink(AlignedBlob::textord_debug_pix().string());
+#else
+    unlink(AlignedBlob::textord_debug_pix().string());
+#endif
   }
   return result;
 }
