@@ -38,7 +38,8 @@
 #include "tprintf.h"
 
 // workaround for "'off_t' was not declared in this scope" with -std=c++11
-#if !defined(HAVE_OFF_T)
+// OSX has off_t defined, but HAVE_OFF_T is false...
+#if !defined(HAVE_OFF_T) && !__APPLE__
 typedef long off_t;
 #endif  // off_t
 
