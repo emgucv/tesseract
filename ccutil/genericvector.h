@@ -331,7 +331,7 @@ class GenericVector {
   void init(int size);
 
   // We are assuming that the object generally placed in thie
-  // vector are small enough that for efficiency it makes sence
+  // vector are small enough that for efficiency it makes sense
   // to start with a larger initial size.
   static const int kDefaultVectorSize = 4;
   inT32   size_used_;
@@ -432,7 +432,7 @@ class PointerVector : public GenericVector<T*> {
   }
   // Copy must be deep, as the pointers will be automatically deleted on
   // destruction.
-  PointerVector(const PointerVector& other) {
+  PointerVector(const PointerVector& other) : GenericVector<T*>(other) {
     this->init(other.size());
     this->operator+=(other);
   }
