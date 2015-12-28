@@ -30,6 +30,11 @@
 #define VARDIR        "configs/" /**< variables files */
 #define EXTERN
 
+#ifdef WINAPI_FAMILY
+#include <Windows.h>
+#include <appmodel.h>
+#endif
+
 const ERRCODE NO_PATH =
 "Warning:explicit path for executable will not be used for configs";
 static const ERRCODE USAGE = "Usage";
@@ -62,11 +67,19 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
     /* Use tessdata prefix from the environment. */
     datadir = tessdata_prefix;
 #if defined(_WIN32)
+#ifdef WINAPI_FAMILY
+  } else if (datadir == NULL || _access(datadir.string(), 0) != 0) {
+#else
   } else if (datadir == NULL || access(datadir.string(), 0) != 0) {
+#endif
     /* Look for tessdata in directory of executable. */
     static char dir[128];
     static char exe[128];
+#ifdef WINAPI_FAMILY
+    DWORD length = 0;
+#else
     DWORD length = GetModuleFileName(NULL, exe, sizeof(exe));
+#endif
     if (length > 0 && length < sizeof(exe)) {
       _splitpath(exe, NULL, dir, NULL, NULL);
       datadir = dir;
