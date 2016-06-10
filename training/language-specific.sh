@@ -69,6 +69,39 @@ LATIN_FONTS=(
     "DejaVu Sans Ultra-Light" \
 )
 
+# List of fonts for printed/neo-Latin ('lat' language code, different from Latin script)
+NEOLATIN_FONTS=(
+    "GFS Bodoni" \
+    "GFS Bodoni Bold" \
+    "GFS Bodoni Italic" \
+    "GFS Bodoni Bold Italic" \
+    "GFS Didot" \
+    "GFS Didot Bold" \
+    "GFS Didot Italic" \
+    "GFS Didot Bold Italic" \
+    "Cardo" \
+    "Cardo Bold" \
+    "Cardo Italic" \
+    "Wyld" \
+    "Wyld Italic" \
+    "EB Garamond" \
+    "EB Garamond Italic" \
+    "Junicode" \
+    "Junicode Bold" \
+    "Junicode Italic" \
+    "Junicode Bold Italic" \
+    "IM FELL DW Pica PRO" \
+    "IM FELL English PRO" \
+    "IM FELL Double Pica PRO" \
+    "IM FELL French Canon PRO" \
+    "IM FELL Great Primer PRO" \
+    "IM FELL DW Pica PRO Italic" \
+    "IM FELL English PRO Italic" \
+    "IM FELL Double Pica PRO Italic" \
+    "IM FELL French Canon PRO Italic" \
+    "IM FELL Great Primer PRO Italic" \
+)
+
 EARLY_LATIN_FONTS=(
     "${FRAKTUR_FONTS[@]}" \
     "${LATIN_FONTS[@]}" \
@@ -354,7 +387,7 @@ GREEK_FONTS=( \
     )
 
 ANCIENT_GREEK_FONTS=( \
-    "GFS Artemisia \
+    "GFS Artemisia" \
     "GFS Artemisia Bold" \
     "GFS Artemisia Bold Italic" \
     "GFS Artemisia Italic" \
@@ -553,29 +586,29 @@ NORTH_AMERICAN_ABORIGINAL_FONTS=( \
 GEORGIAN_FONTS=( \
     "Arial Unicode MS Bold" \
     "Arial Unicode MS" \
-    "BPG Algeti GPL&GNU" \
-    "BPG Chveulebrivi GPL&GNU" \
-    "BPG Courier GPL&GNU" \
-    "BPG Courier S GPL&GNU" \
+    "BPG Algeti GPL\&GNU" \
+    "BPG Chveulebrivi GPL\&GNU" \
+    "BPG Courier GPL\&GNU" \
+    "BPG Courier S GPL\&GNU" \
     "BPG DejaVu Sans 2011 GNU-GPL" \
-    "BPG Elite GPL&GNU" \
-    "BPG Excelsior GPL&GNU" \
-    "BPG Glaho GPL&GNU" \
-    "BPG Gorda GPL&GNU" \
-    "BPG Ingiri GPL&GNU" \
-    "BPG Mrgvlovani Caps GNU&GPL" \
-    "BPG Mrgvlovani GPL&GNU" \
-    "BPG Nateli Caps GPL&GNU Light" \
-    "BPG Nateli Condenced GPL&GNU Light" \
-    "BPG Nateli GPL&GNU Light" \
-    "BPG Nino Medium Cond GPL&GNU" \
-    "BPG Nino Medium GPL&GNU Medium" \
-    "BPG Sans GPL&GNU" \
-    "BPG Sans Medium GPL&GNU" \
-    "BPG Sans Modern GPL&GNU" \
-    "BPG Sans Regular GPL&GNU" \
-    "BPG Serif GPL&GNU" \
-    "BPG Serif Modern GPL&GNU" \
+    "BPG Elite GPL\&GNU" \
+    "BPG Excelsior GPL\&GNU" \
+    "BPG Glaho GPL\&GNU" \
+    "BPG Gorda GPL\&GNU" \
+    "BPG Ingiri GPL\&GNU" \
+    "BPG Mrgvlovani Caps GNU\&GPL" \
+    "BPG Mrgvlovani GPL\&GNU" \
+    "BPG Nateli Caps GPL\&GNU Light" \
+    "BPG Nateli Condenced GPL\&GNU Light" \
+    "BPG Nateli GPL\&GNU Light" \
+    "BPG Nino Medium Cond GPL\&GNU" \
+    "BPG Nino Medium GPL\&GNU Medium" \
+    "BPG Sans GPL\&GNU" \
+    "BPG Sans Medium GPL\&GNU" \
+    "BPG Sans Modern GPL\&GNU" \
+    "BPG Sans Regular GPL\&GNU" \
+    "BPG Serif GPL\&GNU" \
+    "BPG Serif Modern GPL\&GNU" \
     "FreeMono" \
     "FreeMono Bold Italic" \
     "FreeSans" \
@@ -588,26 +621,26 @@ GEORGIAN_FONTS=( \
 OLD_GEORGIAN_FONTS=( \
     "Arial Unicode MS Bold" \
     "Arial Unicode MS" \
-    "BPG Algeti GPL&GNU" \
-    "BPG Courier S GPL&GNU" \
+    "BPG Algeti GPL\&GNU" \
+    "BPG Courier S GPL\&GNU" \
     "BPG DejaVu Sans 2011 GNU-GPL" \
-    "BPG Elite GPL&GNU" \
-    "BPG Excelsior GPL&GNU" \
-    "BPG Glaho GPL&GNU" \
-    "BPG Ingiri GPL&GNU" \
-    "BPG Mrgvlovani Caps GNU&GPL" \
-    "BPG Mrgvlovani GPL&GNU" \
-    "BPG Nateli Caps GPL&GNU Light" \
-    "BPG Nateli Condenced GPL&GNU Light" \
-    "BPG Nateli GPL&GNU Light" \
-    "BPG Nino Medium Cond GPL&GNU" \
-    "BPG Nino Medium GPL&GNU Medium" \
-    "BPG Sans GPL&GNU" \
-    "BPG Sans Medium GPL&GNU" \
-    "BPG Sans Modern GPL&GNU" \
-    "BPG Sans Regular GPL&GNU" \
-    "BPG Serif GPL&GNU" \
-    "BPG Serif Modern GPL&GNU" \
+    "BPG Elite GPL\&GNU" \
+    "BPG Excelsior GPL\&GNU" \
+    "BPG Glaho GPL\&GNU" \
+    "BPG Ingiri GPL\&GNU" \
+    "BPG Mrgvlovani Caps GNU\&GPL" \
+    "BPG Mrgvlovani GPL\&GNU" \
+    "BPG Nateli Caps GPL\&GNU Light" \
+    "BPG Nateli Condenced GPL\&GNU Light" \
+    "BPG Nateli GPL\&GNU Light" \
+    "BPG Nino Medium Cond GPL\&GNU" \
+    "BPG Nino Medium GPL\&GNU Medium" \
+    "BPG Sans GPL\&GNU" \
+    "BPG Sans Medium GPL\&GNU" \
+    "BPG Sans Modern GPL\&GNU" \
+    "BPG Sans Regular GPL\&GNU" \
+    "BPG Serif GPL\&GNU" \
+    "BPG Serif Modern GPL\&GNU" \
     "FreeSans" \
     "FreeSerif" \
     "FreeSerif Bold" \
@@ -853,6 +886,9 @@ set_lang_specific_parameters() {
           FILTER_ARGUMENTS="--make_early_language_variant=ita"
           TEXT2IMAGE_EXTRA_ARGS=" --ligatures"   # Add ligatures when supported.
           test -z "$FONTS" && FONTS=( "${EARLY_LATIN_FONTS[@]}" );;
+    lat )
+          test -z "$EXPOSURES" && EXPOSURES="-3 -2 -1 0 1 2 3"
+          test -z "$FONTS" && FONTS=( "${NEOLATIN_FONTS[@]}" ) ;;
     spa_old )
           TEXT_CORPUS="${FLAGS_webtext_prefix}/spa.corpus.txt"
           # Make long-s substitutions for Early Spanish text
@@ -893,7 +929,6 @@ set_lang_specific_parameters() {
     isl ) ;;
     ita ) ;;
     jav ) ;;
-    lat ) ;;
     lav ) ;;
     lit ) ;;
     mlt ) ;;

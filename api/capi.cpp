@@ -1,3 +1,20 @@
+///////////////////////////////////////////////////////////////////////
+// File:        capi.cpp
+// Description: C-API TessBaseAPI
+//
+// (C) Copyright 2012, Google Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+///////////////////////////////////////////////////////////////////////
+
 #ifndef TESS_CAPI_INCLUDE_BASEAPI
 #   define TESS_CAPI_INCLUDE_BASEAPI
 #endif
@@ -456,7 +473,7 @@ TESS_API char* TESS_CALL TessBaseAPIGetUTF8Text(TessBaseAPI* handle)
 
 TESS_API char* TESS_CALL TessBaseAPIGetHOCRText(TessBaseAPI* handle, int page_number)
 {
-    return handle->GetHOCRText(page_number);
+    return handle->GetHOCRText(NULL, page_number);
 }
 
 TESS_API char* TESS_CALL TessBaseAPIGetBoxText(TessBaseAPI* handle, int page_number)
