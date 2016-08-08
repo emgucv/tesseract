@@ -376,7 +376,7 @@ void TessBaseAPI::GetAvailableLanguagesAsVector(
     char fname[_MAX_FNAME];
     WIN32_FIND_DATA data;
     BOOL result = TRUE;
-#if WINAPI_FAMILY
+#if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP) //only for NETFX_CORE, excluding WINAPI_FAMILY==WINAPI_FAMILY_DESKTOP_APP
     char tmp[_MAX_FNAME * 5];
     wchar_t wpattern[_MAX_FNAME * 5];
     size_t chars_converted;
@@ -387,7 +387,7 @@ void TessBaseAPI::GetAvailableLanguagesAsVector(
 #endif
     if (handle != INVALID_HANDLE_VALUE) {
       for (; result; result = FindNextFile(handle, &data)) {
-#if WINAPI_FAMILY
+#if (WINAPI_FAMILY == WINAPI_FAMILY_PC_APP || WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP) //only for NETFX_CORE, excluding WINAPI_FAMILY==WINAPI_FAMILY_DESKTOP_APP
          wcstombs(tmp, data.cFileName, _MAX_FNAME);
         _splitpath(tmp, NULL, NULL, fname, NULL);
 #else
