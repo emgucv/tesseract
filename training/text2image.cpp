@@ -70,6 +70,9 @@ BOOL_PARAM_FLAG(degrade_image, true,
                 "Degrade rendered image with speckle noise, dilation/erosion "
                 "and rotation");
 
+// Rotate the rendered image to have more realistic glyph borders
+BOOL_PARAM_FLAG(rotate_image, true, "Rotate the image in a random way.");
+
 // Degradation to apply to the image.
 INT_PARAM_FLAG(exposure, 0, "Exposure level in photocopier");
 
@@ -417,7 +420,7 @@ int main(int argc, char** argv) {
   if (FLAGS_list_available_fonts) {
     const vector<string>& all_fonts = FontUtils::ListAvailableFonts();
     for (int i = 0; i < all_fonts.size(); ++i) {
-      tprintf("%3d: %s\n", i, all_fonts[i].c_str());
+      printf("%3d: %s\n", i, all_fonts[i].c_str());
       ASSERT_HOST_MSG(FontUtils::IsAvailableFont(all_fonts[i].c_str()),
                       "Font %s is unrecognized.\n", all_fonts[i].c_str());
     }
@@ -441,7 +444,7 @@ int main(int argc, char** argv) {
   if (!FLAGS_find_fonts && !FontUtils::IsAvailableFont(FLAGS_font.c_str())) {
     string pango_name;
     if (!FontUtils::IsAvailableFont(FLAGS_font.c_str(), &pango_name)) {
-      tprintf("Could not find font named %s.", FLAGS_font.c_str());
+      tprintf("Could not find font named %s.\n", FLAGS_font.c_str());
       if (!pango_name.empty()) { 
         tprintf("Pango suggested font %s.\n", pango_name.c_str());
       }
@@ -496,7 +499,10 @@ int main(int argc, char** argv) {
 
   string src_utf8;
   // This c_str is NOT redundant!
-  File::ReadFileToStringOrDie(FLAGS_text.c_str(), &src_utf8);
+  if (!File::ReadFileToString(FLAGS_text.c_str(), &src_utf8)) {
+    tprintf("Failed to read file: %s\n", FLAGS_text.c_str());
+    exit(1);
+  }
 
   // Remove the unicode mark if present.
   if (strncmp(src_utf8.c_str(), "\xef\xbb\xbf", 3) == 0) {
@@ -598,7 +604,7 @@ int main(int argc, char** argv) {
           rotation = -1 * page_rotation[page_num];
         }
         if (FLAGS_degrade_image) {
-          pix = DegradeImage(pix, FLAGS_exposure, &randomizer, &rotation);
+          pix = DegradeImage(pix, FLAGS_exposure, &randomizer, FLAGS_rotate_image ? &rotation : NULL);
         }
         render.RotatePageBoxes(rotation);
 
