@@ -77,7 +77,7 @@ Pix* ImageFind::FindImages(Pix* pix) {
   // Leptonica will print an error message and return NULL if we call
   // pixGenHalftoneMask(pixr, NULL, ...) with too small image, so we
   // want to bypass that.
-  if (pixGetWidth(pixr) < kMinImageFindSize || 
+  if (pixGetWidth(pixr) < kMinImageFindSize ||
       pixGetHeight(pixr) < kMinImageFindSize) {
     pixDestroy(&pixr);
     return pixCreate(pixGetWidth(pix), pixGetHeight(pix), 1);
@@ -151,7 +151,8 @@ void ImageFind::ConnCompAndRectangularize(Pix* pix, Boxa** boxa, Pixa** pixa) {
   // Rectangularize the individual images. If a sharp edge in vertical and/or
   // horizontal occupancy can be found, it indicates a probably rectangular
   // image with unwanted bits merged on, so clip to the approximate rectangle.
-  int npixes = pixaGetCount(*pixa);
+  int npixes = 0;
+  if (*boxa != nullptr && *pixa != nullptr) npixes = pixaGetCount(*pixa);
   for (int i = 0; i < npixes; ++i) {
     int x_start, x_end, y_start, y_end;
     Pix* img_pix = pixaGetPix(*pixa, i, L_CLONE);
@@ -1115,7 +1116,7 @@ static bool TestWeakIntersectedPart(const TBOX& im_box,
                                     ColPartition* part) {
   if (part->flow() < BTFT_STRONG_CHAIN) {
     // A weak partition intersects the box.
-    TBOX part_box = part->bounding_box();
+    const TBOX& part_box = part->bounding_box();
     if (im_box.contains(part_box)) {
       int area = part_box.area();
       int intersect_area = IntersectArea(part_box, part_list);
@@ -1180,7 +1181,7 @@ static bool ScanForOverlappingText(ColPartitionGrid* part_grid, TBOX* box) {
         part->flow() == BTFT_STRONG_CHAIN) {
       // Text intersects the box.
       any_text_in_padded_rect = true;
-      TBOX part_box = part->bounding_box();
+      const TBOX& part_box = part->bounding_box();
       if (box->overlap(part_box)) {
         return true;
       }
@@ -1293,7 +1294,8 @@ void ImageFind::FindImagePartitions(Pix* image_pix,
   Pixa* pixa;
   ConnCompAndRectangularize(image_pix, &boxa, &pixa);
   // Iterate the connected components in the image regions mask.
-  int nboxes = boxaGetCount(boxa);
+  int nboxes = 0;
+  if (boxa != nullptr && pixa != nullptr) nboxes = boxaGetCount(boxa);
   for (int i = 0; i < nboxes; ++i) {
     l_int32 x, y, width, height;
     boxaGetBoxGeometry(boxa, i, &x, &y, &width, &height);

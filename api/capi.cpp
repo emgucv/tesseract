@@ -538,8 +538,17 @@ TESS_API void TESS_CALL TessBaseAPISetProbabilityInContextFunc(TessBaseAPI* hand
 
 TESS_API BOOL TESS_CALL TessBaseAPIDetectOS(TessBaseAPI* handle, OSResults* results)
 {
-    return handle->DetectOS(results) ? TRUE : FALSE;
+    return FALSE; // Unsafe ABI, return FALSE always
 }
+
+TESS_API BOOL TESS_CALL TessBaseAPIDetectOrientationScript(TessBaseAPI* handle,
+                                                            int* orient_deg, float* orient_conf, const char** script_name, float* script_conf)
+{
+    bool success;
+    success = handle->DetectOrientationScript(orient_deg, orient_conf, script_name, script_conf);
+    return (BOOL)success;
+}
+
 
 TESS_API void TESS_CALL TessBaseAPIGetFeaturesForBlob(TessBaseAPI* handle, TBLOB* blob, INT_FEATURE_STRUCT* int_features,
                                                             int* num_features, int* FeatureOutlineIndex)
@@ -597,13 +606,6 @@ TESS_API void TESS_CALL TessBaseAPIInitTruthCallback(TessBaseAPI* handle, TessTr
 {
     handle->InitTruthCallback(cb);
 }
-
-#ifndef NO_CUBE_BUILD
-TESS_API TessCubeRecoContext* TESS_CALL TessBaseAPIGetCubeRecoContext(const TessBaseAPI* handle)
-{
-    return handle->GetCubeRecoContext();
-}
-#endif  // NO_CUBE_BUILD
 
 TESS_API void TESS_CALL TessBaseAPISetMinOrientationMargin(TessBaseAPI* handle, double margin)
 {

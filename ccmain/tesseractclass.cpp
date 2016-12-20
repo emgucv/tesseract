@@ -42,14 +42,11 @@
 #include "tesseractclass.h"
 
 #include "allheaders.h"
-#ifndef NO_CUBE_BUILD
-#include "cube_reco_context.h"
-#endif
 #include "edgblob.h"
 #include "equationdetect.h"
 #include "globals.h"
-#ifndef NO_CUBE_BUILD
-#include "tesseract_cube_combiner.h"
+#ifndef ANDROID_BUILD
+#include "lstmrecognizer.h"
 #endif
 
 namespace tesseract {
@@ -65,6 +62,9 @@ Tesseract::Tesseract()
                   "Generate training data from boxed chars", this->params()),
       BOOL_MEMBER(tessedit_make_boxes_from_boxes, false,
                   "Generate more boxes from boxed chars", this->params()),
+      BOOL_MEMBER(tessedit_train_line_recognizer, false,
+                  "Break input into lines and remap boxes if present",
+                  this->params()),
       BOOL_MEMBER(tessedit_dump_pageseg_images, false,
                   "Dump intermediate images made during page segmentation",
                   this->params()),
@@ -76,11 +76,10 @@ Tesseract::Tesseract()
           " 5=line, 6=word, 7=char"
           " (Values from PageSegMode enum in publictypes.h)",
           this->params()),
-      INT_INIT_MEMBER(tessedit_ocr_engine_mode, tesseract::OEM_TESSERACT_ONLY,
-                      "Which OCR engine(s) to run (Tesseract, Cube, both)."
-                      " Defaults to loading and running only Tesseract"
-                      " (no Cube,no combiner)."
-                      " Values from OcrEngineMode enum in tesseractclass.h)",
+      INT_INIT_MEMBER(tessedit_ocr_engine_mode, tesseract::OEM_DEFAULT,
+                      "Which OCR engine(s) to run (Tesseract, LSTM, both)."
+                      " Defaults to loading and running the most accurate"
+                      "available.",
                       this->params()),
       STRING_MEMBER(tessedit_char_blacklist, "",
                     "Blacklist of chars not to recognize", this->params()),
@@ -221,7 +220,8 @@ Tesseract::Tesseract()
                   "Run paragraph detection on the post-text-recognition "
                   "(more accurate)",
                   this->params()),
-      INT_MEMBER(cube_debug_level, 0, "Print cube debug info.", this->params()),
+      BOOL_MEMBER(lstm_use_matrix, 1,
+                  "Use ratings matrix/beam search with lstm", this->params()),
       STRING_MEMBER(outlines_odd, "%| ", "Non standard number of outlines",
                     this->params()),
       STRING_MEMBER(outlines_2, "ij!?%\":;", "Non standard number of outlines",
@@ -265,7 +265,7 @@ Tesseract::Tesseract()
                   this->params()),
       BOOL_MEMBER(tessedit_debug_quality_metrics, false,
                   "Output data to debug file", this->params()),
-      BOOL_MEMBER(bland_unrej, false, "unrej potential with no chekcs",
+      BOOL_MEMBER(bland_unrej, false, "unrej potential with no checks",
                   this->params()),
       double_MEMBER(quality_rowrej_pc, 1.1,
                     "good_quality_doc gte good char limit", this->params()),
@@ -398,8 +398,8 @@ Tesseract::Tesseract()
                  "Don't suspect dict wds longer than this", this->params()),
       BOOL_MEMBER(suspect_constrain_1Il, false, "UNLV keep 1Il chars rejected",
                   this->params()),
-      double_MEMBER(suspect_rating_per_ch, 999.9, "Don't touch bad rating limit",
-                    this->params()),
+      double_MEMBER(suspect_rating_per_ch, 999.9,
+                    "Don't touch bad rating limit", this->params()),
       double_MEMBER(suspect_accept_rating, -999.9, "Accept good rating limit",
                     this->params()),
       BOOL_MEMBER(tessedit_minimal_rejection, false,
@@ -512,7 +512,6 @@ Tesseract::Tesseract()
                     "Page separator (default is form feed control character)",
                     this->params()),
 
-
       // The following parameters were deprecated and removed from their
       // original
       // locations. The parameters are temporarily kept here to give Tesseract
@@ -604,8 +603,8 @@ Tesseract::Tesseract()
 
       backup_config_file_(NULL),
       pix_binary_(NULL),
-      cube_binary_(NULL),
       pix_grey_(NULL),
+      pix_original_(NULL),
       pix_thresholds_(NULL),
       source_resolution_(0),
       textord_(this),
@@ -616,33 +615,26 @@ Tesseract::Tesseract()
       reskew_(1.0f, 0.0f),
       most_recently_used_(this),
       font_table_size_(0),
-#ifndef NO_CUBE_BUILD
-      cube_cntxt_(NULL),
-      tess_cube_combiner_(NULL),
+      equ_detect_(NULL),
+#ifndef ANDROID_BUILD
+      lstm_recognizer_(NULL),
 #endif
-      equ_detect_(NULL) {
+      train_line_page_num_(0) {
 }
 
 Tesseract::~Tesseract() {
   Clear();
+  pixDestroy(&pix_original_);
   end_tesseract();
   sub_langs_.delete_data_pointers();
-#ifndef NO_CUBE_BUILD
-  // Delete cube objects.
-  if (cube_cntxt_ != NULL) {
-    delete cube_cntxt_;
-    cube_cntxt_ = NULL;
-  }
-  if (tess_cube_combiner_ != NULL) {
-    delete tess_cube_combiner_;
-    tess_cube_combiner_ = NULL;
-  }
+#ifndef ANDROID_BUILD
+  delete lstm_recognizer_;
+  lstm_recognizer_ = NULL;
 #endif
 }
 
 void Tesseract::Clear() {
   pixDestroy(&pix_binary_);
-  pixDestroy(&cube_binary_);
   pixDestroy(&pix_grey_);
   pixDestroy(&pix_thresholds_);
   pixDestroy(&scaled_color_);
@@ -692,8 +684,6 @@ void Tesseract::SetBlackAndWhitelist() {
 // page segmentation.
 void Tesseract::PrepareForPageseg() {
   textord_.set_use_cjk_fp_model(textord_use_cjk_fp_model);
-  pixDestroy(&cube_binary_);
-  cube_binary_ = pixClone(pix_binary());
   // Find the max splitter strategy over all langs.
   ShiroRekhaSplitter::SplitStrategy max_pageseg_strategy =
       static_cast<ShiroRekhaSplitter::SplitStrategy>(
@@ -704,9 +694,6 @@ void Tesseract::PrepareForPageseg() {
         static_cast<inT32>(sub_langs_[i]->pageseg_devanagari_split_strategy));
     if (pageseg_strategy > max_pageseg_strategy)
       max_pageseg_strategy = pageseg_strategy;
-    // Clone the cube image to all the sub langs too.
-    pixDestroy(&sub_langs_[i]->cube_binary_);
-    sub_langs_[i]->cube_binary_ = pixClone(pix_binary());
     pixDestroy(&sub_langs_[i]->pix_binary_);
     sub_langs_[i]->pix_binary_ = pixClone(pix_binary());
   }

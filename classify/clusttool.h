@@ -1,10 +1,10 @@
 /******************************************************************************
- **	Filename:	clusttool.h
- **	Purpose:	Definition of clustering utility tools
- **	Author:		Dan Johnson
- **	History:	6/6/89, DSJ, Created.
+ ** Filename: clusttool.h
+ ** Purpose:  Definition of clustering utility tools
+ ** Author:   Dan Johnson
+ ** History:  6/6/89, DSJ, Created.
  **
- **	(c) Copyright Hewlett-Packard Company, 1988.
+ ** (c) Copyright Hewlett-Packard Company, 1988.
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
@@ -15,8 +15,9 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  ******************************************************************************/
-#ifndef   __CLUSTERTOOL__
-#define   __CLUSTERTOOL__
+
+#ifndef TESSERACT_CLASSIFY_CLUSTTOOL_H_
+#define TESSERACT_CLASSIFY_CLUSTTOOL_H_
 
 //--------------------------Include Files---------------------------------------
 #include "host.h"
@@ -36,7 +37,7 @@ PROTOSTYLE ReadProtoStyle(FILE *File);
 
 FLOAT32 *ReadNFloats (FILE * File, uinT16 N, FLOAT32 Buffer[]);
 
-void WriteParamDesc (FILE * File, uinT16 N, PARAM_DESC ParamDesc[]);
+void WriteParamDesc(FILE *File, uinT16 N, const PARAM_DESC ParamDesc[]);
 
 void WritePrototype(FILE *File, uinT16 N, PROTOTYPE *Proto);
 
@@ -44,13 +45,9 @@ void WriteNFloats (FILE * File, uinT16 N, FLOAT32 Array[]);
 
 void WriteProtoStyle(FILE *File, PROTOSTYLE ProtoStyle);
 
-void WriteProtoList(
-     FILE	*File,
-     uinT16	N,
-     PARAM_DESC	ParamDesc[],
-     LIST	ProtoList,
-     BOOL8	WriteSigProtos,
-     BOOL8	WriteInsigProtos);
+void WriteProtoList(FILE *File, uinT16 N, PARAM_DESC ParamDesc[],
+                    LIST ProtoList, BOOL8 WriteSigProtos,
+                    BOOL8 WriteInsigProtos);
 
 //--------------Global Data Definitions and Declarations---------------------
 // define errors that can be trapped
@@ -65,4 +62,4 @@ void WriteProtoList(
 #define ILLEGALDISTRIBUTION 5008
 #define ILLEGALFLOAT  5009
 #define ILLEGALESSENTIALSPEC  5013
-#endif
+#endif // TESSERACT_CLASSIFY_CLUSTTOOL_H_

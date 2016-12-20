@@ -6,7 +6,7 @@
 # Initialization
 # ----------------------------------------
 AC_PREREQ([2.50])
-AC_INIT([tesseract], [3.05.00dev], [https://github.com/tesseract-ocr/tesseract/issues])
+AC_INIT([tesseract], [4.00.00dev], [https://github.com/tesseract-ocr/tesseract/issues])
 AC_PROG_CXX([g++ clang++])
 AC_LANG([C++])
 AC_LANG_COMPILER_REQUIRE
@@ -18,8 +18,8 @@ AC_PREFIX_DEFAULT([/usr/local])
 
 # Define date of package, etc. Could be useful in auto-generated
 # documentation.
-PACKAGE_YEAR=2015
-PACKAGE_DATE="07/11"
+PACKAGE_YEAR=2016
+PACKAGE_DATE="11/11"
 
 abs_top_srcdir=`AS_DIRNAME([$0])`
 gitrev="`git --git-dir=${abs_top_srcdir}/.git --work-tree=${abs_top_srcdir} describe --always --tags`"
@@ -42,8 +42,8 @@ AC_SUBST([PACKAGE_DATE])
 GENERIC_LIBRARY_NAME=tesseract
 
 # Release versioning
-GENERIC_MAJOR_VERSION=3
-GENERIC_MINOR_VERSION=4
+GENERIC_MAJOR_VERSION=4
+GENERIC_MINOR_VERSION=0
 GENERIC_MICRO_VERSION=0
 
 # API version (often = GENERIC_MAJOR_VERSION.GENERIC_MINOR_VERSION)
@@ -75,6 +75,7 @@ AM_CONDITIONAL([T_WIN], false)
 AM_CONDITIONAL([MINGW], false)
 AM_CONDITIONAL([OSX], false)
 AM_CONDITIONAL([GRAPHICS_DISABLED], false)
+AC_SUBST([AM_CPPFLAGS])
 
 OPENCL_INC="/opt/AMDAPP/include"
 OPENCL_LIBS="-lOpenCL -ltiff"
@@ -146,17 +147,6 @@ if test "$enable_graphics" = "no"; then
   AM_CONDITIONAL([GRAPHICS_DISABLED], true)
 fi
 
-# Check if cube should be disabled
-AC_MSG_CHECKING([whether to disable cube])
-AC_ARG_ENABLE([cube],
-  [AC_HELP_STRING([--disable-cube], [don't build cube support (experimental)])],
-    [disable_cube="yes"], [disable_cube="no"])
-AC_MSG_RESULT([$disable_cube])
-AM_CONDITIONAL([NO_CUBE_BUILD], [test "$disable_cube" = "yes"])
-if test "$disable_cube" = "yes"; then
-  AC_SUBST([AM_CPPFLAGS], [-DNO_CUBE_BUILD])
-fi
-
 # check whether to build embedded version
 AC_MSG_CHECKING([--enable-embedded argument])
 AC_ARG_ENABLE([embedded],
@@ -166,18 +156,11 @@ AC_ARG_ENABLE([embedded],
 AC_MSG_RESULT([$enable_embedded])
 AM_CONDITIONAL([EMBEDDED], [test "$enable_embedded" = "yes"])
 if test "$enable_embedded" = "yes"; then
-  AC_SUBST([AM_CPPFLAGS], [-DEMBEDDED])
+  AM_CPPFLAGS="-DEMBEDDED $AM_CPPFLAGS"
 fi
 
 # check whether to build OpenMP support
-AM_CONDITIONAL([OPENMP], false)
 AC_OPENMP
-AS_IF([test "x$OPENMP_CFLAGS" != "x"],
-  [AM_CONDITIONAL([OPENMP], true)
-   AC_SUBST([AM_CPPFLAGS], ["$OPENMP_CXXFLAGS"])
-   AC_DEFINE([OPENMP], [], [Defined when compiled with OpenMP support])]
-)
-
 
 # check whether to build opencl version
 AC_MSG_CHECKING([--enable-opencl argument])
@@ -227,7 +210,7 @@ case "${host_os}" in
       if !($have_opencl_lib); then
         AC_MSG_ERROR([Required OpenCL library not found!])
       fi
-      AC_SUBST([AM_CPPFLAGS], [-DUSE_OPENCL])
+      AM_CPPFLAGS="-DUSE_OPENCL $AM_CPPFLAGS"
       OPENCL_CPPFLAGS=""
       OPENCL_LDFLAGS="-framework OpenCL"
     fi
@@ -246,7 +229,7 @@ case "${host_os}" in
         if !($have_tiff); then
             AC_MSG_ERROR([Required TIFF headers not found! Try to install libtiff-dev?? package.])
         fi
-        AC_SUBST([AM_CPPFLAGS], [-DUSE_OPENCL])
+        AM_CPPFLAGS="-DUSE_OPENCL $AM_CPPFLAGS"
         OPENCL_CPPFLAGS="-I${OPENCL_INC}"
         OPENCL_LDFLAGS="${OPENCL_LIBS}"
     fi
@@ -420,53 +403,27 @@ AC_CHECK_TYPES([mbstate_t],,, [#include "wchar.h"])
 # Test auxiliary packages
 # ----------------------------------------
 
-# Check location of leptonica/liblept headers.
-AC_MSG_CHECKING([for leptonica])
-AC_ARG_VAR([LIBLEPT_HEADERSDIR], [Leptonica headers directory])
-
-have_lept=no
-if test "$LIBLEPT_HEADERSDIR" = "" ; then
-  LIBLEPT_HEADERSDIR="/usr/local/include /usr/include /opt/local/include/leptonica"
-fi
-for incd in $LIBLEPT_HEADERSDIR
-do
-  for lept in . leptonica liblept
-  do
-    if test -r "$incd/$lept/allheaders.h" ; then
-      CPPFLAGS="$CPPFLAGS -I$incd/$lept"
-      have_lept=yes
-    fi
-  done
-done
-
-if test "$have_lept" = yes ; then
-  AC_MSG_RESULT(yes)
-  AC_CHECK_LIB([lept], [l_generateCIDataForPdf], [],
-               [AC_MSG_ERROR([leptonica library with pdf support (>= 1.71) is missing])])
+PKG_CHECK_MODULES([LEPTONICA], [lept >= 1.71], [have_lept=true], [have_lept=false])
+if $have_lept; then
+  CPPFLAGS="$CPPFLAGS $LEPTONICA_CFLAGS"
 else
-  AC_MSG_ERROR([leptonica not found])
+  AC_MSG_ERROR([Leptonica 1.71 or higher is required. Try to install libleptonica-dev package.])
 fi
-
-AC_MSG_CHECKING([leptonica headers version >= 1.71])
-AC_PREPROC_IFELSE(
-    [AC_LANG_PROGRAM([#include "allheaders.h"],
-[#if (LIBLEPT_MAJOR_VERSION >= 1) && (LIBLEPT_MINOR_VERSION >= 71)
-int i = 0;
-#else
-#error You need to upgrade your leptonica library!
-#endif])],
-    [AC_MSG_RESULT(yes)],
-    [AC_MSG_FAILURE([leptonica 1.71 or higher is required])])
 
 AM_CONDITIONAL([ENABLE_TRAINING], true)
 
 # Check location of icu headers
-have_icu=false
-AC_CHECK_HEADERS([unicode/uchar.h], [have_icu=true], [have_icu=false])
-if !($have_icu); then
+PKG_CHECK_MODULES([ICU_UC], [icu-uc], [have_icu_uc=true], [have_icu_uc=false])
+PKG_CHECK_MODULES([ICU_I18N], [icu-i18n], [have_icu_i18n=true], [have_icu_i18n=false])
+if !($have_icu_uc && $have_icu_i18n); then
+  AC_CHECK_HEADERS([unicode/uchar.h], [have_icu=true], [have_icu=false])
+  if !($have_icu); then
         AC_MSG_WARN([Training tools WILL NOT be built because of missing icu library.])
         AC_MSG_WARN([Try to install libicu-devel package.])
         AM_CONDITIONAL([ENABLE_TRAINING], false)
+  else
+    ICU_UC_LIBS="-licui18n -licuuc"
+  fi
 fi
 
 # Check location of pango headers
@@ -520,15 +477,15 @@ fi
 # Output files
 AC_CONFIG_FILES([Makefile tesseract.pc])
 AC_CONFIG_FILES([api/Makefile])
+AC_CONFIG_FILES([arch/Makefile])
 AC_CONFIG_FILES([ccmain/Makefile])
 AC_CONFIG_FILES([opencl/Makefile])
 AC_CONFIG_FILES([ccstruct/Makefile])
 AC_CONFIG_FILES([ccutil/Makefile])
 AC_CONFIG_FILES([classify/Makefile])
-AC_CONFIG_FILES([cube/Makefile])
 AC_CONFIG_FILES([cutil/Makefile])
 AC_CONFIG_FILES([dict/Makefile])
-AC_CONFIG_FILES([neural_networks/runtime/Makefile])
+AC_CONFIG_FILES([lstm/Makefile])
 AC_CONFIG_FILES([textord/Makefile])
 AC_CONFIG_FILES([viewer/Makefile])
 AC_CONFIG_FILES([wordrec/Makefile])

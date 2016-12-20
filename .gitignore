@@ -52,6 +52,7 @@ training/wordlist2dawg
 *.patch
 
 # ignore compilation files
+build/*
 */.deps/*
 */.libs/*
 *.lo
@@ -63,8 +64,6 @@ training/wordlist2dawg
 *.jar
 
 # tessdata
-*.cube.*
-*.tesseract_cube.*
 *.traineddata
 
 # OpenCL
@@ -73,5 +72,7 @@ kernel*.bin
 
 # build dirs
 /build*
+/.cppan
 /cppan
+/*.dll
 /win*

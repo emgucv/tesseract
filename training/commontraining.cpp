@@ -39,7 +39,6 @@
 #include <math.h>
 
 using tesseract::CCUtil;
-using tesseract::FontInfo;
 using tesseract::IntFeatureSpace;
 using tesseract::ParamUtils;
 using tesseract::ShapeTable;
@@ -116,15 +115,15 @@ void ParseArguments(int* argc, char ***argv) {
 namespace tesseract {
 // Helper loads shape table from the given file.
 ShapeTable* LoadShapeTable(const STRING& file_prefix) {
-  ShapeTable* shape_table = NULL;
+  ShapeTable* shape_table = nullptr;
   STRING shape_table_file = file_prefix;
   shape_table_file += kShapeTableFileSuffix;
   FILE* shape_fp = fopen(shape_table_file.string(), "rb");
-  if (shape_fp != NULL) {
+  if (shape_fp != nullptr) {
     shape_table = new ShapeTable;
     if (!shape_table->DeSerialize(false, shape_fp)) {
       delete shape_table;
-      shape_table = NULL;
+      shape_table = nullptr;
       tprintf("Error: Failed to read shape table %s\n",
               shape_table_file.string());
     } else {
@@ -145,7 +144,7 @@ void WriteShapeTable(const STRING& file_prefix, const ShapeTable& shape_table) {
   STRING shape_table_file = file_prefix;
   shape_table_file += kShapeTableFileSuffix;
   FILE* fp = fopen(shape_table_file.string(), "wb");
-  if (fp != NULL) {
+  if (fp != nullptr) {
     if (!shape_table.Serialize(fp)) {
       fprintf(stderr, "Error writing shape table: %s\n",
               shape_table_file.string());
@@ -160,7 +159,7 @@ void WriteShapeTable(const STRING& file_prefix, const ShapeTable& shape_table) {
 /**
  * Creates a MasterTraininer and loads the training data into it:
  * Initializes feature_defs and IntegerFX.
- * Loads the shape_table if shape_table != NULL.
+ * Loads the shape_table if shape_table != nullptr.
  * Loads initial unicharset from -U command-line option.
  * If FLAGS_T is set, loads the majority of data from there, else:
  *  - Loads font info from -F option.
@@ -169,7 +168,7 @@ void WriteShapeTable(const STRING& file_prefix, const ShapeTable& shape_table) {
  *  - Deletes outliers and computes canonical samples.
  *  - If FLAGS_output_trainer is set, saves the trainer for future use.
  * Computes canonical and cloud features.
- * If shape_table is not NULL, but failed to load, make a fake flat one,
+ * If shape_table is not nullptr, but failed to load, make a fake flat one,
  * as shape clustering was not run.
  */
 MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
@@ -183,14 +182,14 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
     *file_prefix += FLAGS_D.c_str();
     *file_prefix += "/";
   }
-  // If we are shape clustering (NULL shape_table) or we successfully load
+  // If we are shape clustering (nullptr shape_table) or we successfully load
   // a shape_table written by a previous shape clustering, then
   // shape_analysis will be true, meaning that the MasterTrainer will replace
   // some members of the unicharset with their fragments.
   bool shape_analysis = false;
-  if (shape_table != NULL) {
+  if (shape_table != nullptr) {
     *shape_table = LoadShapeTable(*file_prefix);
-    if (*shape_table != NULL)
+    if (*shape_table != nullptr)
       shape_analysis = true;
   } else {
     shape_analysis = true;
@@ -207,19 +206,19 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
     if (!FLAGS_F.empty()) {
       if (!trainer->LoadFontInfo(FLAGS_F.c_str())) {
         delete trainer;
-        return NULL;
+        return nullptr;
       }
     }
     if (!FLAGS_X.empty()) {
       if (!trainer->LoadXHeights(FLAGS_X.c_str())) {
         delete trainer;
-        return NULL;
+        return nullptr;
       }
     }
     trainer->SetFeatureSpace(fs);
     const char* page_name;
     // Load training data from .tr files on the command line.
-    while ((page_name = GetNextFilename(argc, argv)) != NULL) {
+    while ((page_name = GetNextFilename(argc, argv)) != nullptr) {
       tprintf("Reading %s ...\n", page_name);
       trainer->ReadTrainingSamples(page_name, feature_defs, false);
 
@@ -245,7 +244,7 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
     // Write the master trainer if required.
     if (!FLAGS_output_trainer.empty()) {
       FILE* fp = fopen(FLAGS_output_trainer.c_str(), "wb");
-      if (fp == NULL) {
+      if (fp == nullptr) {
         tprintf("Can't create saved trainer data!\n");
       } else {
         trainer->Serialize(fp);
@@ -257,7 +256,7 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
     tprintf("Loading master trainer from file:%s\n",
             FLAGS_T.c_str());
     FILE* fp = fopen(FLAGS_T.c_str(), "rb");
-    if (fp == NULL) {
+    if (fp == nullptr) {
       tprintf("Can't read file %s to initialize master trainer\n",
               FLAGS_T.c_str());
     } else {
@@ -267,7 +266,7 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
     if (!success) {
       tprintf("Deserialize of master trainer failed!\n");
       delete trainer;
-      return NULL;
+      return nullptr;
     }
     trainer->SetFeatureSpace(fs);
   }
@@ -276,12 +275,12 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
       !trainer->unicharset().save_to_file(FLAGS_O.c_str())) {
     fprintf(stderr, "Failed to save unicharset to file %s\n", FLAGS_O.c_str());
     delete trainer;
-    return NULL;
+    return nullptr;
   }
-  if (shape_table != NULL) {
+  if (shape_table != nullptr) {
     // If we previously failed to load a shapetable, then shape clustering
     // wasn't run so make a flat one now.
-    if (*shape_table == NULL) {
+    if (*shape_table == nullptr) {
       *shape_table = new ShapeTable;
       trainer->SetupFlatShapeTable(*shape_table);
       tprintf("Flat shape table summary: %s\n",
@@ -298,12 +297,12 @@ MasterTrainer* LoadTrainingData(int argc, const char* const * argv,
 /**
  * This routine returns the next command line argument.  If
  * there are no remaining command line arguments, it returns
- * NULL.  This routine should only be called after all option
+ * nullptr.  This routine should only be called after all option
  * arguments have been parsed and removed with ParseArguments.
  *
  * Globals:
  * - tessoptind defined by tessopt sys call
- * @return Next command line argument or NULL.
+ * @return Next command line argument or nullptr.
  * @note Exceptions: none
  * @note History: Fri Aug 18 09:34:12 1989, DSJ, Created.
  */
@@ -311,28 +310,23 @@ const char *GetNextFilename(int argc, const char* const * argv) {
   if (tessoptind < argc)
     return argv[tessoptind++];
   else
-    return NULL;
-}	/* GetNextFilename */
-
-
+    return nullptr;
+} /* GetNextFilename */
 
 /*---------------------------------------------------------------------------*/
 /**
  * This routine searches through a list of labeled lists to find
  * a list with the specified label.  If a matching labeled list
- * cannot be found, NULL is returned.
+ * cannot be found, nullptr is returned.
  * @param List list to search
  * @param Label label to search for
- * @return Labeled list with the specified Label or NULL.
+ * @return Labeled list with the specified label or nullptr.
  * @note Globals: none
  * @note Exceptions: none
  * @note History: Fri Aug 18 15:57:41 1989, DSJ, Created.
  */
-LABELEDLIST FindList (
-    LIST	List,
-    char	*Label)
-{
-  LABELEDLIST	LabeledList;
+LABELEDLIST FindList(LIST List, char* Label) {
+  LABELEDLIST LabeledList;
 
   iterate (List)
   {
@@ -340,9 +334,9 @@ LABELEDLIST FindList (
     if (strcmp (LabeledList->Label, Label) == 0)
       return (LabeledList);
   }
-  return (NULL);
+  return (nullptr);
 
-}	/* FindList */
+} /* FindList */
 
 /*---------------------------------------------------------------------------*/
 /**
@@ -354,10 +348,8 @@ LABELEDLIST FindList (
  * @note Exceptions: none
  * @note History: Fri Aug 18 16:08:46 1989, DSJ, Created.
  */
-LABELEDLIST NewLabeledList (
-    const char	*Label)
-{
-  LABELEDLIST	LabeledList;
+LABELEDLIST NewLabeledList(const char* Label) {
+  LABELEDLIST LabeledList;
 
   LabeledList = (LABELEDLIST) Emalloc (sizeof (LABELEDLISTNODE));
   LabeledList->Label = (char*)Emalloc (strlen (Label)+1);
@@ -367,7 +359,7 @@ LABELEDLIST NewLabeledList (
   LabeledList->font_sample_count = 0;
   return (LabeledList);
 
-}	/* NewLabeledList */
+} /* NewLabeledList */
 
 /*---------------------------------------------------------------------------*/
 // TODO(rays) This is now used only by cntraining. Convert cntraining to use
@@ -386,7 +378,7 @@ LABELEDLIST NewLabeledList (
  * @return none
  * @note Globals: none
  * @note Exceptions: none
- * @note History: 
+ * @note History:
  * - Fri Aug 18 13:11:39 1989, DSJ, Created.
  * - Tue May 17 1998 simplifications to structure, illiminated
  *   font, and feature specification levels of structure.
@@ -409,12 +401,12 @@ void ReadTrainingSamples(const FEATURE_DEFS_STRUCT& feature_defs,
     char_sample->font_sample_count = 0;
   }
 
-  while (fgets(buffer, 2048, file) != NULL) {
+  while (fgets(buffer, 2048, file) != nullptr) {
     if (buffer[0] == '\n')
       continue;
 
     sscanf(buffer, "%*s %s", unichar);
-    if (unicharset != NULL && !unicharset->contains_unichar(unichar)) {
+    if (unicharset != nullptr && !unicharset->contains_unichar(unichar)) {
       unicharset->unichar_insert(unichar);
       if (unicharset->size() > MAX_NUM_CLASSES) {
         tprintf("Error: Size of unicharset in training is "
@@ -423,7 +415,7 @@ void ReadTrainingSamples(const FEATURE_DEFS_STRUCT& feature_defs,
       }
     }
     char_sample = FindList(*training_samples, unichar);
-    if (char_sample == NULL) {
+    if (char_sample == nullptr) {
       char_sample = NewLabeledList(unichar);
       *training_samples = push(*training_samples, char_sample);
     }
@@ -460,17 +452,17 @@ void FreeTrainingSamples(LIST CharList) {
   FEATURE_SET FeatureSet;
   LIST FeatureList;
 
-
-  iterate(CharList) {  /* iterate through all of the fonts */
+  LIST nodes = CharList;
+  iterate(CharList) { /* iterate through all of the fonts */
     char_sample = (LABELEDLIST) first_node(CharList);
     FeatureList = char_sample->List;
-    iterate(FeatureList) {  /* iterate through all of the classes */
+    iterate(FeatureList) { /* iterate through all of the classes */
       FeatureSet = (FEATURE_SET) first_node(FeatureList);
       FreeFeatureSet(FeatureSet);
     }
     FreeLabeledList(char_sample);
   }
-  destroy(CharList);
+  destroy(nodes);
 }  /* FreeTrainingSamples */
 
 /*---------------------------------------------------------------------------*/
@@ -509,11 +501,11 @@ CLUSTERER *SetUpForClustering(const FEATURE_DEFS_STRUCT &FeatureDefs,
                               const char* program_feature_type) {
   uinT16 N;
   int i, j;
-  FLOAT32 *Sample = NULL;
+  FLOAT32 *Sample = nullptr;
   CLUSTERER *Clusterer;
   inT32 CharID;
-  LIST FeatureList = NULL;
-  FEATURE_SET FeatureSet = NULL;
+  LIST FeatureList = nullptr;
+  FEATURE_SET FeatureSet = nullptr;
 
   int desc_index = ShortNameToFeatureType(FeatureDefs, program_feature_type);
   N = FeatureDefs.FeatureDesc[desc_index]->NumParams;
@@ -524,7 +516,7 @@ CLUSTERER *SetUpForClustering(const FEATURE_DEFS_STRUCT &FeatureDefs,
   iterate(FeatureList) {
     FeatureSet = (FEATURE_SET) first_node(FeatureList);
     for (i = 0; i < FeatureSet->MaxNumFeatures; i++) {
-      if (Sample == NULL)
+      if (Sample == nullptr)
         Sample = (FLOAT32 *)Emalloc(N * sizeof(FLOAT32));
       for (j = 0; j < N; j++)
         Sample[j] = FeatureSet->Features[i]->Params[j];
@@ -532,15 +524,15 @@ CLUSTERER *SetUpForClustering(const FEATURE_DEFS_STRUCT &FeatureDefs,
     }
     CharID++;
   }
-  if ( Sample != NULL ) free( Sample );
-  return( Clusterer );
+  free(Sample);
+  return Clusterer;
 
-}	/* SetUpForClustering */
+} /* SetUpForClustering */
 
 /*------------------------------------------------------------------------*/
 void MergeInsignificantProtos(LIST ProtoList, const char* label,
-                              CLUSTERER	*Clusterer, CLUSTERCONFIG *Config) {
-  PROTOTYPE	*Prototype;
+                              CLUSTERER* Clusterer, CLUSTERCONFIG* Config) {
+  PROTOTYPE* Prototype;
   bool debug = strcmp(FLAGS_test_ch.c_str(), label) == 0;
 
   LIST pProtoList = ProtoList;
@@ -549,7 +541,7 @@ void MergeInsignificantProtos(LIST ProtoList, const char* label,
     if (Prototype->Significant || Prototype->Merged)
       continue;
     FLOAT32 best_dist = 0.125;
-    PROTOTYPE* best_match = NULL;
+    PROTOTYPE* best_match = nullptr;
     // Find the nearest alive prototype.
     LIST list_it = ProtoList;
     iterate(list_it) {
@@ -564,7 +556,7 @@ void MergeInsignificantProtos(LIST ProtoList, const char* label,
         }
       }
     }
-    if (best_match != NULL && !best_match->Significant) {
+    if (best_match != nullptr && !best_match->Significant) {
       if (debug)
         tprintf("Merging red clusters (%d+%d) at %g,%g and %g,%g\n",
                 best_match->NumSamples, Prototype->NumSamples,
@@ -578,7 +570,7 @@ void MergeInsignificantProtos(LIST ProtoList, const char* label,
                                              best_match->Mean, Prototype->Mean);
       Prototype->NumSamples = 0;
       Prototype->Merged = 1;
-    } else if (best_match != NULL) {
+    } else if (best_match != nullptr) {
       if (debug)
         tprintf("Red proto at %g,%g matched a green one at %g,%g\n",
                 Prototype->Mean[0], Prototype->Mean[1],
@@ -600,7 +592,7 @@ void MergeInsignificantProtos(LIST ProtoList, const char* label,
       Prototype->Significant = true;
     }
   }
-}	/* MergeInsignificantProtos */
+} /* MergeInsignificantProtos */
 
 /*-----------------------------------------------------------------------------*/
 void CleanUpUnusedData(
@@ -611,20 +603,20 @@ void CleanUpUnusedData(
   iterate(ProtoList)
   {
     Prototype = (PROTOTYPE *) first_node (ProtoList);
-    if(Prototype->Variance.Elliptical != NULL)
+    if(Prototype->Variance.Elliptical != nullptr)
     {
       memfree(Prototype->Variance.Elliptical);
-      Prototype->Variance.Elliptical = NULL;
+      Prototype->Variance.Elliptical = nullptr;
     }
-    if(Prototype->Magnitude.Elliptical != NULL)
+    if(Prototype->Magnitude.Elliptical != nullptr)
     {
       memfree(Prototype->Magnitude.Elliptical);
-      Prototype->Magnitude.Elliptical = NULL;
+      Prototype->Magnitude.Elliptical = nullptr;
     }
-    if(Prototype->Weight.Elliptical != NULL)
+    if(Prototype->Weight.Elliptical != nullptr)
     {
       memfree(Prototype->Weight.Elliptical);
-      Prototype->Weight.Elliptical = NULL;
+      Prototype->Weight.Elliptical = nullptr;
     }
   }
 }
@@ -656,37 +648,37 @@ LIST RemoveInsignificantProtos(
       NewProto->Significant = Proto->Significant;
       NewProto->Style = Proto->Style;
       NewProto->NumSamples = Proto->NumSamples;
-      NewProto->Cluster = NULL;
-      NewProto->Distrib = NULL;
+      NewProto->Cluster = nullptr;
+      NewProto->Distrib = nullptr;
 
       for (i=0; i < N; i++)
         NewProto->Mean[i] = Proto->Mean[i];
-      if (Proto->Variance.Elliptical != NULL)
+      if (Proto->Variance.Elliptical != nullptr)
       {
         NewProto->Variance.Elliptical = (FLOAT32 *)Emalloc(N * sizeof(FLOAT32));
         for (i=0; i < N; i++)
           NewProto->Variance.Elliptical[i] = Proto->Variance.Elliptical[i];
       }
       else
-        NewProto->Variance.Elliptical = NULL;
+        NewProto->Variance.Elliptical = nullptr;
       //---------------------------------------------
-      if (Proto->Magnitude.Elliptical != NULL)
+      if (Proto->Magnitude.Elliptical != nullptr)
       {
         NewProto->Magnitude.Elliptical = (FLOAT32 *)Emalloc(N * sizeof(FLOAT32));
         for (i=0; i < N; i++)
           NewProto->Magnitude.Elliptical[i] = Proto->Magnitude.Elliptical[i];
       }
       else
-        NewProto->Magnitude.Elliptical = NULL;
+        NewProto->Magnitude.Elliptical = nullptr;
       //------------------------------------------------
-      if (Proto->Weight.Elliptical != NULL)
+      if (Proto->Weight.Elliptical != nullptr)
       {
         NewProto->Weight.Elliptical = (FLOAT32 *)Emalloc(N * sizeof(FLOAT32));
         for (i=0; i < N; i++)
           NewProto->Weight.Elliptical[i] = Proto->Weight.Elliptical[i];
       }
       else
-        NewProto->Weight.Elliptical = NULL;
+        NewProto->Weight.Elliptical = nullptr;
 
       NewProto->TotalMagnitude = Proto->TotalMagnitude;
       NewProto->LogMagnitude = Proto->LogMagnitude;
@@ -695,14 +687,11 @@ LIST RemoveInsignificantProtos(
   }
   FreeProtoList(&ProtoList);
   return (NewProtoList);
-}	/* RemoveInsignificantProtos */
+} /* RemoveInsignificantProtos */
 
 /*----------------------------------------------------------------------------*/
-MERGE_CLASS FindClass (
-    LIST	List,
-    const char	*Label)
-{
-  MERGE_CLASS	MergeClass;
+MERGE_CLASS FindClass(LIST List, const char* Label) {
+  MERGE_CLASS MergeClass;
 
   iterate (List)
   {
@@ -710,15 +699,13 @@ MERGE_CLASS FindClass (
     if (strcmp (MergeClass->Label, Label) == 0)
       return (MergeClass);
   }
-  return (NULL);
+  return (nullptr);
 
-}	/* FindClass */
+} /* FindClass */
 
 /*---------------------------------------------------------------------------*/
-MERGE_CLASS NewLabeledClass (
-    const char	*Label)
-{
-  MERGE_CLASS	MergeClass;
+MERGE_CLASS NewLabeledClass(const char* Label) {
+  MERGE_CLASS MergeClass;
 
   MergeClass = new MERGE_CLASS_NODE;
   MergeClass->Label = (char*)Emalloc (strlen (Label)+1);
@@ -726,7 +713,7 @@ MERGE_CLASS NewLabeledClass (
   MergeClass->Class = NewClass (MAX_NUM_PROTOS, MAX_NUM_CONFIGS);
   return (MergeClass);
 
-}	/* NewLabeledClass */
+} /* NewLabeledClass */
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -738,38 +725,37 @@ MERGE_CLASS NewLabeledClass (
  * @note Exceptions: none
  * @note History: Fri Aug 18 17:44:27 1989, DSJ, Created.
  */
-void FreeLabeledClassList (
-    LIST	ClassList)
-{
-  MERGE_CLASS	MergeClass;
+void FreeLabeledClassList(LIST ClassList) {
+  MERGE_CLASS MergeClass;
 
-  iterate (ClassList) 		/* iterate through all of the fonts */
+  LIST nodes = ClassList;
+  iterate(ClassList) /* iterate through all of the fonts */
   {
     MergeClass = (MERGE_CLASS) first_node (ClassList);
     free (MergeClass->Label);
     FreeClass(MergeClass->Class);
     delete MergeClass;
   }
-  destroy (ClassList);
+  destroy(nodes);
 
-}	/* FreeLabeledClassList */
+} /* FreeLabeledClassList */
 
 /* SetUpForFloat2Int */
 CLASS_STRUCT* SetUpForFloat2Int(const UNICHARSET& unicharset,
                                 LIST LabeledClassList) {
-  MERGE_CLASS	MergeClass;
-  CLASS_TYPE		Class;
-  int				NumProtos;
-  int				NumConfigs;
-  int				NumWords;
-  int				i, j;
-  float			Values[3];
-  PROTO			NewProto;
-  PROTO			OldProto;
-  BIT_VECTOR		NewConfig;
-  BIT_VECTOR		OldConfig;
+  MERGE_CLASS MergeClass;
+  CLASS_TYPE Class;
+  int NumProtos;
+  int NumConfigs;
+  int NumWords;
+  int i, j;
+  float Values[3];
+  PROTO NewProto;
+  PROTO OldProto;
+  BIT_VECTOR NewConfig;
+  BIT_VECTOR OldConfig;
 
-  // 	printf("Float2Int ...\n");
+  //  printf("Float2Int ...\n");
 
   CLASS_STRUCT* float_classes = new CLASS_STRUCT[unicharset.size()];
   iterate(LabeledClassList)
@@ -821,9 +807,9 @@ CLASS_STRUCT* SetUpForFloat2Int(const UNICHARSET& unicharset,
 void Normalize (
     float  *Values)
 {
-  register float Slope;
-  register float Intercept;
-  register float Normalizer;
+  float Slope;
+  float Intercept;
+  float Normalizer;
 
   Slope      = tan (Values [2] * 2 * PI);
   Intercept  = Values [1] - Slope * Values [0];
@@ -835,20 +821,20 @@ void Normalize (
 } // Normalize
 
 /*-------------------------------------------------------------------------*/
-void FreeNormProtoList (
-    LIST	CharList)
+void FreeNormProtoList(LIST CharList)
 
 {
-  LABELEDLIST	char_sample;
+  LABELEDLIST char_sample;
 
-  iterate (CharList) 		/* iterate through all of the fonts */
+  LIST nodes = CharList;
+  iterate(CharList) /* iterate through all of the fonts */
   {
     char_sample = (LABELEDLIST) first_node (CharList);
     FreeLabeledList (char_sample);
   }
-  destroy (CharList);
+  destroy(nodes);
 
-}	// FreeNormProtoList
+}  // FreeNormProtoList
 
 /*---------------------------------------------------------------------------*/
 void AddToNormProtosList(
@@ -869,19 +855,16 @@ void AddToNormProtosList(
 }
 
 /*---------------------------------------------------------------------------*/
-int NumberOfProtos(
-    LIST ProtoList,
-    BOOL8	CountSigProtos,
-    BOOL8	CountInsigProtos)
-{
+int NumberOfProtos(LIST ProtoList, BOOL8 CountSigProtos,
+                   BOOL8 CountInsigProtos) {
   int N = 0;
-  PROTOTYPE	*Proto;
+  PROTOTYPE* Proto;
 
   iterate(ProtoList)
   {
     Proto = (PROTOTYPE *) first_node ( ProtoList );
-    if (( Proto->Significant && CountSigProtos )	||
-        ( ! Proto->Significant && CountInsigProtos ) )
+    if ((Proto->Significant && CountSigProtos) ||
+        (!Proto->Significant && CountInsigProtos))
       N++;
   }
   return(N);
