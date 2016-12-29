@@ -991,6 +991,8 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
                                             int timeout_millisec,
                                             TessResultRenderer* renderer,
                                             int tessedit_page_number) {
+	return false;
+/*
 #ifndef ANDROID_BUILD
   Pix *pix = NULL;
 #ifdef USE_OPENCL
@@ -1030,6 +1032,7 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
 #else
   return false;
 #endif
+*/
 }
 
 // Master ProcessPages calls ProcessPagesInternal and then does any post-

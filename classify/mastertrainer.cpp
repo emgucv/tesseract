@@ -218,7 +218,7 @@ void MasterTrainer::LoadPageImages(const char* filename) {
   int page;
   Pix* pix;
   for (page = 0; ; page++) {
-    pix = pixReadFromMultipageTiff(filename, &offset);
+    //pix = pixReadFromMultipageTiff(filename, &offset);
     if (!pix) break;
     page_images_.push_back(pix);
     if (!offset) break;
