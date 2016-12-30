@@ -172,7 +172,7 @@ void NetworkIO::FromPixes(const StaticShape& shape,
                           TRand* randomizer) {
   int target_height = shape.height();
   int target_width = shape.width();
-  std::vector<std::pair<int, int>> h_w_pairs;
+  std::vector< std::pair<int, int> > h_w_pairs;
   for (auto pix : pixes) {
     Pix* var_pix = const_cast<Pix*>(pix);
     int width = pixGetWidth(var_pix);
