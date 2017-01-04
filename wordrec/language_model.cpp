@@ -32,7 +32,7 @@
 #include "params.h"
 #include "params_training_featdef.h"
 
-#if (defined(_MSC_VER) && _MSC_VER < 1900) || defined(ANDROID)
+#if (defined(_MSC_VER) && _MSC_VER < 1900 && !((defined WINAPI_FAMILY) && WINAPI_FAMILY==WINAPI_FAMILY_APP )) || defined(ANDROID)
 double log2(double n) {
   return log(n) / log(2.0);
 }

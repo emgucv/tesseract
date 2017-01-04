@@ -83,7 +83,7 @@ void SVMutex::Unlock() {
 #endif
 }
 
-#ifndef GRAPHICS_DISABLED
+//#ifndef GRAPHICS_DISABLED
 
 const int kMaxMsgSize = 4096;
 
@@ -98,6 +98,7 @@ void SVSync::ExitThread() {
 
 // Starts a new process.
 void SVSync::StartProcess(const char* executable, const char* args) {
+#ifndef GRAPHICS_DISABLED
   std::string proc;
   proc.append(executable);
   proc.append(" ");
@@ -148,9 +149,11 @@ void SVSync::StartProcess(const char* executable, const char* args) {
     delete[] argv;
   }
 #endif
+#endif
 }
 
 SVSemaphore::SVSemaphore() {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   semaphore_ = CreateSemaphore(0, 0, 10, 0);
 #elif defined(__APPLE__)
@@ -164,9 +167,11 @@ SVSemaphore::SVSemaphore() {
 #else
   sem_init(&semaphore_, 0, 0);
 #endif
+#endif
 }
 
 void SVSemaphore::Signal() {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   ReleaseSemaphore(semaphore_, 1, NULL);
 #elif defined(__APPLE__)
@@ -174,9 +179,11 @@ void SVSemaphore::Signal() {
 #else
   sem_post(&semaphore_);
 #endif
+#endif
 }
 
 void SVSemaphore::Wait() {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   WaitForSingleObject(semaphore_, INFINITE);
 #elif defined(__APPLE__)
@@ -184,12 +191,14 @@ void SVSemaphore::Wait() {
 #else
   sem_wait(&semaphore_);
 #endif
+#endif
 }
 
 
 // Create new thread.
 
 void SVSync::StartThread(void *(*func)(void*), void* arg) {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   LPTHREAD_START_ROUTINE f = (LPTHREAD_START_ROUTINE) func;
   DWORD threadid;
@@ -207,28 +216,34 @@ void SVSync::StartThread(void *(*func)(void*), void* arg) {
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&helper, &attr, func, arg);
 #endif
+#endif
 }
 
 // Place a message in the message buffer (and flush it).
 void SVNetwork::Send(const char* msg) {
+#ifndef GRAPHICS_DISABLED
   mutex_send_->Lock();
   msg_buffer_out_.append(msg);
   mutex_send_->Unlock();
+#endif
 }
 
 // Send the whole buffer.
 void SVNetwork::Flush() {
+#ifndef GRAPHICS_DISABLED
   mutex_send_->Lock();
   while (!msg_buffer_out_.empty()) {
     int i = send(stream_, msg_buffer_out_.c_str(), msg_buffer_out_.length(), 0);
     msg_buffer_out_.erase(0, i);
   }
   mutex_send_->Unlock();
+#endif
 }
 
 // Receive a message from the server.
 // This will always return one line of char* (denoted by \n).
 char* SVNetwork::Receive() {
+#ifndef GRAPHICS_DISABLED
   char* result = NULL;
 #if defined(_WIN32) || defined(__CYGWIN__)
   if (has_content) { result = strtok (NULL, "\n"); }
@@ -273,26 +288,35 @@ char* SVNetwork::Receive() {
     return strtok_r(msg_buffer_in_, "\n", &buffer_ptr_);
 #endif
   }
+#else
+	return 0;
+#endif
 }
 
 // Close the connection to the server.
 void SVNetwork::Close() {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   closesocket(stream_);
 #else
   close(stream_);
+#endif
 #endif
 }
 
 
 // The program to invoke to start ScrollView
 static const char* ScrollViewProg() {
+#ifndef GRAPHICS_DISABLED
 #ifdef _WIN32
   const char* prog = "java -Xms512m -Xmx1024m";
 #else
   const char* prog = "sh";
 #endif
   return prog;
+#else 
+  return 0;
+#endif
 }
 
 
@@ -324,15 +348,17 @@ static std::string ScrollViewCommand(std::string scrollview_path) {
 
 // Platform-independent freeaddrinfo()
 static void FreeAddrInfo(struct addrinfo* addr_info) {
+#ifndef GRAPHICS_DISABLED
   #if defined(__linux__)
   freeaddrinfo(addr_info);
   #else
   delete addr_info->ai_addr;
   delete addr_info;
   #endif
+#endif
 }
 
-
+#ifndef GRAPHICS_DISABLED
 // Non-linux version of getaddrinfo()
 #if !defined(__linux__)
 static int GetAddrInfoNonLinux(const char* hostname, int port,
@@ -386,10 +412,11 @@ static int GetAddrInfo(const char* hostname, int port,
   return GetAddrInfoNonLinux(hostname, port, address);
 #endif
 }
-
+#endif
 
 // Set up a connection to a ScrollView on hostname:port.
 SVNetwork::SVNetwork(const char* hostname, int port) {
+#ifndef GRAPHICS_DISABLED
   mutex_send_ = new SVMutex();
   msg_buffer_in_ = new char[kMaxMsgSize + 1];
   msg_buffer_in_[0] = '\0';
@@ -447,11 +474,14 @@ SVNetwork::SVNetwork(const char* hostname, int port) {
     }
   }
   FreeAddrInfo(addr_info);
+#endif
 }
 
 SVNetwork::~SVNetwork() {
+#ifndef GRAPHICS_DISABLED
   delete[] msg_buffer_in_;
   delete mutex_send_;
+#endif
 }
 
-#endif  // GRAPHICS_DISABLED
+//#endif  // GRAPHICS_DISABLED

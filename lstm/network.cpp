@@ -277,30 +277,35 @@ double Network::Random(double range) {
   return randomizer_->SignedRand(range);
 }
 
-#ifndef GRAPHICS_DISABLED
+
 // === Debug image display methods. ===
 // Displays the image of the matrix to the forward window.
 void Network::DisplayForward(const NetworkIO& matrix) {
+#ifndef GRAPHICS_DISABLED
   Pix* image = matrix.ToPix();
   ClearWindow(false, name_.string(), pixGetWidth(image),
               pixGetHeight(image), &forward_win_);
   DisplayImage(image, forward_win_);
   forward_win_->Update();
+#endif
 }
 
 // Displays the image of the matrix to the backward window.
 void Network::DisplayBackward(const NetworkIO& matrix) {
+#ifndef GRAPHICS_DISABLED
   Pix* image = matrix.ToPix();
   STRING window_name = name_ + "-back";
   ClearWindow(false, window_name.string(), pixGetWidth(image),
               pixGetHeight(image), &backward_win_);
   DisplayImage(image, backward_win_);
   backward_win_->Update();
+#endif
 }
 
 // Creates the window if needed, otherwise clears it.
 void Network::ClearWindow(bool tess_coords, const char* window_name,
                           int width, int height, ScrollView** window) {
+#ifndef GRAPHICS_DISABLED
   if (*window == NULL) {
     int min_size = MIN(width, height);
     if (min_size < kMinWinSize) {
@@ -318,16 +323,21 @@ void Network::ClearWindow(bool tess_coords, const char* window_name,
   } else {
     (*window)->Clear();
   }
+#endif
 }
 
 // Displays the pix in the given window. and returns the height of the pix.
 // The pix is pixDestroyed.
 int Network::DisplayImage(Pix* pix, ScrollView* window) {
+#ifndef GRAPHICS_DISABLED
   int height = pixGetHeight(pix);
   window->Image(pix, 0, 0);
   pixDestroy(&pix);
   return height;
-}
+#else
+  return -1;
 #endif  // GRAPHICS_DISABLED
+}
+
 
 }  // namespace tesseract.
