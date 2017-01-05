@@ -19,7 +19,7 @@
 #include "tprintf.h"
 
 #undef X86_BUILD
-#if defined(__x86_64__) || defined(__i386__) || defined(_WIN32)
+#if defined(__x86_64__) || defined(__i386__) || (defined(_WIN32) && ! defined(WINAPI_FAMILY))
 # if !defined(ANDROID_BUILD)
 #  define X86_BUILD 1
 # endif // !ANDROID_BUILD
@@ -51,7 +51,7 @@ SIMDDetect::SIMDDetect() {
     sse_available_ = (ecx & 0x00080000) != 0;
     avx_available_ = (ecx & 0x10000000) != 0;
   }
-# elif defined(_WIN32)
+# elif (defined(_WIN32) && ! defined(WINAPI_FAMILY))
   int cpuInfo[4];
   __cpuid(cpuInfo, 0);
   if (cpuInfo[0] >= 1) {
