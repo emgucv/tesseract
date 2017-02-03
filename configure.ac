@@ -118,12 +118,18 @@ esac
 ## Checks for supported compiler options.
 AM_CONDITIONAL([AVX_OPT], false)
 AM_CONDITIONAL([SSE41_OPT], false)
-AX_CHECK_COMPILE_FLAG([-mavx], [avx=1], [avx=0])
-AX_CHECK_COMPILE_FLAG([-msse4.1], [sse41=1], [sse41=0])
-if test x$avx = x1; then
-    AM_CONDITIONAL([AVX_OPT], true)
+
+# The current implementation for AVX uses 64 bit code.
+AC_CHECK_SIZEOF([void *])
+if test "$ac_cv_sizeof_void_p" = "8"; then
+    AX_CHECK_COMPILE_FLAG([-mavx], [avx=true], [avx=false])
+    if $avx; then
+        AM_CONDITIONAL([AVX_OPT], true)
+    fi
 fi
-if test x$sse41 = x1; then
+
+AX_CHECK_COMPILE_FLAG([-msse4.1], [sse41=true], [sse41=false])
+if $sse41; then
     AM_CONDITIONAL([SSE41_OPT], true)
 fi
 
@@ -368,14 +374,34 @@ AC_COMPILE_IFELSE(
   ]])
 ], [
      AC_MSG_RESULT(yes)
-     has_cpp11=yes
    ],
    [
      AC_MSG_RESULT(no)
-     has_cpp11=no
+     AC_MSG_ERROR([Your compiler does not have the necessary c++11 support! Cannot proceed.])
    ])
 AC_CHECK_FUNCS([snprintf],, [snprintfworks=yes])
 CXXFLAGS="$OLD_CXXFLAGS"
+
+
+# set c++11 support based on platform/compiler
+case "${host_os}" in
+  cygwin*)
+    CXXFLAGS="$CXXFLAGS -std=gnu++11"
+    ;;
+  *-darwin* | *-macos10*)
+     if test "x$CLANG" = "xyes"; then
+       CXXFLAGS="$CXXFLAGS -std=c++11 "
+       LDFLAGS="$LDFLAGS -stdlib=libc++"
+     else
+       CXXFLAGS="$CXXFLAGS -std=c++11"
+     fi
+    ;;
+  *)
+    # default
+    CXXFLAGS="$CXXFLAGS -std=c++11"
+    ;;
+esac
+
 
 # ----------------------------------------
 # Check for libraries
@@ -458,29 +484,6 @@ else
       CPPFLAGS="$CPPFLAGS $cairo_CFLAGS"
 fi
 
-# set c++11 support based on platform/compiler
-if test "x$has_cpp11" = "xyes"; then
-  case "${host_os}" in
-    cygwin*)
-      CXXFLAGS="$CXXFLAGS -std=gnu++11"
-      ;;
-    *-darwin* | *-macos10*)
-       if test "x$CLANG" = "xyes"; then
-         CXXFLAGS="$CXXFLAGS -std=c++11 "
-         LDFLAGS="$LDFLAGS -stdlib=libc++"
-       else
-         CXXFLAGS="$CXXFLAGS -std=c++11"
-       fi
-      ;;
-    *)
-      # default
-      CXXFLAGS="$CXXFLAGS -std=c++11"
-      ;;
-  esac
-else
-  AC_MSG_WARN([Training tools WILL NOT be built because of missing c++11 support.])
-  AM_CONDITIONAL([ENABLE_TRAINING], false)
-fi
 
 # ----------------------------------------
 # Final Tasks and Output

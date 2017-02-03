@@ -79,7 +79,7 @@ Tesseract::Tesseract()
       INT_INIT_MEMBER(tessedit_ocr_engine_mode, tesseract::OEM_DEFAULT,
                       "Which OCR engine(s) to run (Tesseract, LSTM, both)."
                       " Defaults to loading and running the most accurate"
-                      "available.",
+                      " available.",
                       this->params()),
       STRING_MEMBER(tessedit_char_blacklist, "",
                     "Blacklist of chars not to recognize", this->params()),
@@ -214,6 +214,8 @@ Tesseract::Tesseract()
       BOOL_MEMBER(test_pt, false, "Test for point", this->params()),
       double_MEMBER(test_pt_x, 99999.99, "xcoord", this->params()),
       double_MEMBER(test_pt_y, 99999.99, "ycoord", this->params()),
+      INT_MEMBER(multilang_debug_level, 0, "Print multilang debug info.",
+                 this->params()),
       INT_MEMBER(paragraph_debug_level, 0, "Print paragraph debug info.",
                  this->params()),
       BOOL_MEMBER(paragraph_text_based, true,
@@ -389,6 +391,9 @@ Tesseract::Tesseract()
                   this->params()),
       BOOL_MEMBER(tessedit_create_pdf, false, "Write .pdf output file",
                   this->params()),
+      BOOL_MEMBER(textonly_pdf, false,
+                  "Create PDF with only one invisible text layer",
+                  this->params()),
       STRING_MEMBER(unrecognised_char, "|",
                     "Output char for unidentified blobs", this->params()),
       INT_MEMBER(suspect_level, 99, "Suspect marker level", this->params()),
@@ -452,7 +457,7 @@ Tesseract::Tesseract()
                   this->params()),
       INT_MEMBER(tessedit_page_number, -1,
                  "-1 -> All pages"
-                 " , else specifc page to process",
+                 " , else specific page to process",
                  this->params()),
       BOOL_MEMBER(tessedit_write_images, false,
                   "Capture the image from the IPE", this->params()),
@@ -634,6 +639,8 @@ Tesseract::~Tesseract() {
 }
 
 void Tesseract::Clear() {
+  STRING debug_name = imagebasename + "_debug.pdf";
+  pixa_debug_.WritePDF(debug_name.string());
   pixDestroy(&pix_binary_);
   pixDestroy(&pix_grey_);
   pixDestroy(&pix_thresholds_);
@@ -701,7 +708,7 @@ void Tesseract::PrepareForPageseg() {
   // the newly splitted image.
   splitter_.set_orig_pix(pix_binary());
   splitter_.set_pageseg_split_strategy(max_pageseg_strategy);
-  if (splitter_.Split(true)) {
+  if (splitter_.Split(true, &pixa_debug_)) {
     ASSERT_HOST(splitter_.splitted_image());
     pixDestroy(&pix_binary_);
     pix_binary_ = pixClone(splitter_.splitted_image());
@@ -730,7 +737,7 @@ void Tesseract::PrepareForTessOCR(BLOCK_LIST* block_list,
   splitter_.set_segmentation_block_list(block_list);
   splitter_.set_ocr_split_strategy(max_ocr_strategy);
   // Run the splitter for OCR
-  bool split_for_ocr = splitter_.Split(false);
+  bool split_for_ocr = splitter_.Split(false, &pixa_debug_);
   // Restore pix_binary to the binarized original pix for future reference.
   ASSERT_HOST(splitter_.orig_pix());
   pixDestroy(&pix_binary_);

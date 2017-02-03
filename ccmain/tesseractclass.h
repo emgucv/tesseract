@@ -28,11 +28,12 @@
 
 #include "allheaders.h"
 #include "control.h"
-#include "docqual.h"
+#include "debugpixa.h"
 #include "devanagari_processing.h"
+#include "docqual.h"
 #include "genericvector.h"
-#include "params.h"
 #include "ocrclass.h"
+#include "params.h"
 #include "textord.h"
 #include "wordrec.h"
 
@@ -202,7 +203,8 @@ class Tesseract : public Wordrec {
     pix_original_ = original_pix;
     // Clone to sublangs as well.
     for (int i = 0; i < sub_langs_.size(); ++i)
-      sub_langs_[i]->set_pix_original(pixClone(original_pix));
+      sub_langs_[i]->set_pix_original(
+          original_pix ? pixClone(original_pix) : nullptr);
   }
   // Returns a pointer to a Pix representing the best available (original) image
   // of the page. Can be of any bit depth, but never color-mapped, as that has
@@ -372,9 +374,8 @@ class Tesseract : public Wordrec {
   // Helper to recognize the word using the given (language-specific) tesseract.
   // Returns positive if this recognizer found more new best words than the
   // number kept from best_words.
-  int RetryWithLanguage(const WordData& word_data,
-                        WordRecognizer recognizer,
-                        WERD_RES** in_word,
+  int RetryWithLanguage(const WordData& word_data, WordRecognizer recognizer,
+                        bool debug, WERD_RES** in_word,
                         PointerVector<WERD_RES>* best_words);
   // Moves good-looking "noise"/diacritics from the reject list to the main
   // blob list on the current word. Returns true if anything was done, and
@@ -907,6 +908,7 @@ class Tesseract : public Wordrec {
   BOOL_VAR_H(test_pt, false, "Test for point");
   double_VAR_H(test_pt_x, 99999.99, "xcoord");
   double_VAR_H(test_pt_y, 99999.99, "ycoord");
+  INT_VAR_H(multilang_debug_level, 0, "Print multilang debug info.");
   INT_VAR_H(paragraph_debug_level, 0, "Print paragraph debug info.");
   BOOL_VAR_H(paragraph_text_based, true,
              "Run paragraph detection on the post-text-recognition "
@@ -1026,6 +1028,8 @@ class Tesseract : public Wordrec {
   BOOL_VAR_H(tessedit_create_hocr, false, "Write .html hOCR output file");
   BOOL_VAR_H(tessedit_create_tsv, false, "Write .tsv output file");
   BOOL_VAR_H(tessedit_create_pdf, false, "Write .pdf output file");
+  BOOL_VAR_H(textonly_pdf, false,
+             "Create PDF with only one invisible text layer");
   STRING_VAR_H(unrecognised_char, "|",
                "Output char for unidentified blobs");
   INT_VAR_H(suspect_level, 99, "Suspect marker level");
@@ -1065,7 +1069,7 @@ class Tesseract : public Wordrec {
   INT_VAR_H(min_sane_x_ht_pixels, 8, "Reject any x-ht lt or eq than this");
   BOOL_VAR_H(tessedit_create_boxfile, false, "Output text with boxes");
   INT_VAR_H(tessedit_page_number, -1,
-            "-1 -> All pages, else specifc page to process");
+            "-1 -> All pages, else specific page to process");
   BOOL_VAR_H(tessedit_write_images, false, "Capture the image from the IPE");
   BOOL_VAR_H(interactive_display_mode, false, "Run interactively?");
   STRING_VAR_H(file_type, ".tif", "Filename extension");
@@ -1193,6 +1197,8 @@ class Tesseract : public Wordrec {
   Pix* pix_original_;
   // Thresholds that were used to generate the thresholded image from grey.
   Pix* pix_thresholds_;
+  // Debug images. If non-empty, will be written on destruction.
+  DebugPixa pixa_debug_;
   // Input image resolution after any scaling. The resolution is not well
   // transmitted by operations on Pix, so we keep an independent record here.
   int source_resolution_;
@@ -1224,6 +1230,5 @@ class Tesseract : public Wordrec {
 };
 
 }  // namespace tesseract
-
 
 #endif  // TESSERACT_CCMAIN_TESSERACTCLASS_H_

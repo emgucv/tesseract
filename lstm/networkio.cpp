@@ -172,7 +172,7 @@ void NetworkIO::FromPixes(const StaticShape& shape,
                           TRand* randomizer) {
   int target_height = shape.height();
   int target_width = shape.width();
-  std::vector< std::pair<int, int> > h_w_pairs;
+  std::vector<std::pair<int, int>> h_w_pairs;
   for (auto pix : pixes) {
     Pix* var_pix = const_cast<Pix*>(pix);
     int width = pixGetWidth(var_pix);
@@ -553,7 +553,6 @@ void NetworkIO::EnsureBestLabel(int t, int label) {
     // remainder to best_label.
     int num_classes = NumFeatures();
     float* targets = f_[t];
-    float enhancement = (1.0f - targets[label]) / 3.0f;
     for (int c = 0; c < num_classes; ++c) {
       if (c == label) {
         targets[c] += (1.0 - targets[c]) * (2 / 3.0);

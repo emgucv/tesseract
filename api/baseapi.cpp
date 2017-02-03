@@ -995,27 +995,13 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data,
 /*
 #ifndef ANDROID_BUILD
   Pix *pix = NULL;
-#ifdef USE_OPENCL
-  OpenclDevice od;
-#endif  // USE_OPENCL
   int page = (tessedit_page_number >= 0) ? tessedit_page_number : 0;
   size_t offset = 0;
   for (; ; ++page) {
     if (tessedit_page_number >= 0)
       page = tessedit_page_number;
-#ifdef USE_OPENCL
-    if ( od.selectedDeviceIsOpenCL() ) {
-      pix = (data) ?
-          od.pixReadMemTiffCl(data, size, page) :
-          od.pixReadTiffCl(filename, page);
-    } else {
-#endif  // USE_OPENCL
-      pix = (data) ?
-          pixReadMemFromMultipageTiff(data, size, &offset) :
-          pixReadFromMultipageTiff(filename, &offset);
-#ifdef USE_OPENCL
-    }
-#endif  // USE_OPENCL
+      pix = (data) ? pixReadMemFromMultipageTiff(data, size, &offset)
+                   : pixReadFromMultipageTiff(filename, &offset);
     if (pix == NULL) break;
     tprintf("Page %d\n", page + 1);
     char page_str[kMaxIntSize];
@@ -1101,7 +1087,15 @@ bool TessBaseAPI::ProcessPagesInternal(const char* filename,
 
   // Maybe we have a filelist
   if (r != 0 || format == IFF_UNKNOWN) {
-    STRING s(buf.c_str());
+    STRING s;
+    if (stdInput) {
+      s = buf.c_str();
+    } else {
+      std::ifstream t(filename);
+      std::string u((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+      s = u.c_str();
+    }
     return ProcessPagesFileList(NULL, &s, retry_config,
                                 timeout_millisec, renderer,
                                 tesseract_->tessedit_page_number);

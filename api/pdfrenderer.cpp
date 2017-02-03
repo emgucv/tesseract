@@ -178,10 +178,12 @@ const int kCharWidth = 2;
  * PDF Renderer interface implementation
  **********************************************************************/
 
-TessPDFRenderer::TessPDFRenderer(const char* outputbase, const char *datadir)
+TessPDFRenderer::TessPDFRenderer(const char *outputbase, const char *datadir,
+                                 bool textonly)
     : TessResultRenderer(outputbase, "pdf") {
   obj_  = 0;
   datadir_ = datadir;
+  textonly_ = textonly;
   offsets_.push_back(0);
 }
 
@@ -326,7 +328,11 @@ char* TessPDFRenderer::GetPDFTextObjects(TessBaseAPI* api,
   pdf_str.add_str_double("", prec(width));
   pdf_str += " 0 0 ";
   pdf_str.add_str_double("", prec(height));
-  pdf_str += " 0 0 cm /Im1 Do Q\n";
+  pdf_str += " 0 0 cm";
+  if (!textonly_) {
+    pdf_str += " /Im1 Do";
+  }
+  pdf_str += " Q\n";
 
   int line_x1 = 0;
   int line_y1 = 0;
@@ -703,11 +709,6 @@ bool TessPDFRenderer::imageToPDFObj(Pix *pix,
   L_COMP_DATA *cid = NULL;
   const int kJpegQuality = 85;
 
-  // TODO(jbreiden) Leptonica 1.71 doesn't correctly handle certain
-  // types of PNG files, especially if there are 2 samples per pixel.
-  // We can get rid of this logic after Leptonica 1.72 is released and
-  // has propagated everywhere. Bug discussion as follows.
-  // https://code.google.com/p/tesseract-ocr/issues/detail?id=1300
   int format, sad;
   findFileFormat(filename, &format);
   if (pixGetSpp(pix) == 4 && format == IFF_PNG) {
@@ -837,6 +838,7 @@ bool TessPDFRenderer::imageToPDFObj(Pix *pix,
 bool TessPDFRenderer::AddImageHandler(TessBaseAPI* api) {
   size_t n;
   char buf[kBasicBufSize];
+  char buf2[kBasicBufSize];
   Pix *pix = api->GetInputImage();
   char *filename = (char *)api->GetInputName();
   int ppi = api->GetSourceYResolution();
@@ -844,6 +846,9 @@ bool TessPDFRenderer::AddImageHandler(TessBaseAPI* api) {
     return false;
   double width = pixGetWidth(pix) * 72.0 / ppi;
   double height = pixGetHeight(pix) * 72.0 / ppi;
+
+  snprintf(buf2, sizeof(buf2), "/XObject << /Im1 %ld 0 R >>\n", obj_ + 2);
+  const char *xobject = (textonly_) ? "" : buf2;
 
   // PAGE
   n = snprintf(buf, sizeof(buf),
@@ -855,19 +860,18 @@ bool TessPDFRenderer::AddImageHandler(TessBaseAPI* api) {
                "  /Contents %ld 0 R\n"
                "  /Resources\n"
                "  <<\n"
-               "    /XObject << /Im1 %ld 0 R >>\n"
+               "    %s"
                "    /ProcSet [ /PDF /Text /ImageB /ImageI /ImageC ]\n"
                "    /Font << /f-0-0 %ld 0 R >>\n"
                "  >>\n"
                ">>\n"
                "endobj\n",
                obj_,
-               2L,            // Pages object
-               width,
-               height,
-               obj_ + 1,      // Contents object
-               obj_ + 2,      // Image object
-               3L);           // Type0 Font
+               2L,  // Pages object
+               width, height,
+               obj_ + 1,  // Contents object
+               xobject,   // Image object
+               3L);       // Type0 Font
   if (n >= sizeof(buf)) return false;
   pages_.push_back(obj_);
   AppendPDFObject(buf);
@@ -904,13 +908,15 @@ bool TessPDFRenderer::AddImageHandler(TessBaseAPI* api) {
   objsize += strlen(b2);
   AppendPDFObjectDIY(objsize);
 
-  char *pdf_object;
-  if (!imageToPDFObj(pix, filename, obj_, &pdf_object, &objsize)) {
-    return false;
+  if (!textonly_) {
+    char *pdf_object = nullptr;
+    if (!imageToPDFObj(pix, filename, obj_, &pdf_object, &objsize)) {
+      return false;
+    }
+    AppendData(pdf_object, objsize);
+    AppendPDFObjectDIY(objsize);
+    delete[] pdf_object;
   }
-  AppendData(pdf_object, objsize);
-  AppendPDFObjectDIY(objsize);
-  delete[] pdf_object;
   return true;
 }
 

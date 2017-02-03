@@ -16,6 +16,11 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////
 
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "lstmtrainer.h"
 #include <string>
 
@@ -55,8 +60,6 @@ const int kNumPagesPerBatch = 100;
 const int kMinStartedErrorRate = 75;
 // Error rate at which to transition to stage 1.
 const double kStageTransitionThreshold = 10.0;
-// How often to test for flipping.
-const int kFlipTestRate = 20;
 // Confidence beyond which the truth is more likely wrong than the recognizer.
 const double kHighConfidence = 0.9375;  // 15/16.
 // Fraction of weight sign-changing total to constitute a definite improvement.
@@ -856,7 +859,6 @@ Trainability LSTMTrainer::PrepareForBackward(const ImageData* trainingdata,
     return UNENCODABLE;
   }
   targets->Resize(*fwd_outputs, network_->NumOutputs());
-  double text_error = 100.0;
   LossType loss_type = OutputLossType();
   if (loss_type == LT_SOFTMAX) {
     if (!ComputeTextTargets(*fwd_outputs, truth_labels, targets)) {
@@ -1211,7 +1213,7 @@ double LSTMTrainer::ComputeCharError(const GenericVector<int>& truth_str,
 // Computes word recall error rate using a very simple bag of words algorithm.
 // NOTE that this is destructive on both input strings.
 double LSTMTrainer::ComputeWordError(STRING* truth_str, STRING* ocr_str) {
-  typedef TessHashMap<std::string, int, std::hash<std::string> > StrMap;
+  typedef std::unordered_map<std::string, int, std::hash<std::string> > StrMap;
   GenericVector<STRING> truth_words, ocr_words;
   truth_str->split(' ', &truth_words);
   if (truth_words.empty()) return 0.0;
