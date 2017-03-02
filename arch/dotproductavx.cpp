@@ -16,9 +16,8 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////
 
-#if !defined(__AVX__) || defined(__i386__)
+#if !defined(__AVX__)
 // Implementation for non-avx archs.
-// Also used for 32 bit AVX archs because of missing _mm256_extract_epi64.
 
 #include "dotproductavx.h"
 #include <stdio.h>
@@ -90,8 +89,17 @@ double DotProductAVX(const double* u, const double* v, int n) {
   // _mm256_extract_f64 doesn't exist, but resist the temptation to use an sse
   // instruction, as that introduces a 70 cycle delay. All this casting is to
   // fool the instrinsics into thinking we are extracting the bottom int64.
+  auto cast_sum = _mm256_castpd_si256(sum);
   *(reinterpret_cast<inT64*>(&result)) =
-      _mm256_extract_epi64(_mm256_castpd_si256(sum), 0);
+#if defined(_WIN32) || defined(__i386__)
+      // This is a very simple workaround that is activated
+      // for all platforms that do not have _mm256_extract_epi64.
+      // _mm256_extract_epi64(X, Y) == ((uint64_t*)&X)[Y]
+      ((uint64_t*)&cast_sum)[0]
+#else
+      _mm256_extract_epi64(cast_sum, 0)
+#endif
+      ;
   while (offset < n) {
     result += u[offset] * v[offset];
     ++offset;
