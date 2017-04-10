@@ -20,7 +20,12 @@
 #ifndef VS2008_PORT_GETTIMEOFDAY_H_
 #define VS2008_PORT_GETTIMEOFDAY_H_
 
-#ifdef _WIN32
+#if WINAPI_FAMILY
+struct timeval {
+	long    tv_sec;         /* seconds */
+	long    tv_usec;        /* and microseconds */
+};
+#elif defined (_WIN32)
 #include          <winsock.h>    // timeval is defined in here.
 #endif
 

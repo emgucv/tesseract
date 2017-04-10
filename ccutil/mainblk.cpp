@@ -58,7 +58,11 @@ namespace tesseract {
 void CCUtil::main_setup(const char *argv0, const char *basename) {
   imagebasename = basename;      /**< name of image */
 
+#if WINAPI_FAMILY_APP
+  char *tessdata_prefix = 0;
+#else
   char *tessdata_prefix = getenv("TESSDATA_PREFIX");
+#endif
 
   if (argv0 != NULL) {
     /* Use tessdata prefix from the command line. */
