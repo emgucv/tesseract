@@ -20,7 +20,7 @@
 #ifndef VS2008_PORT_GETTIMEOFDAY_H_
 #define VS2008_PORT_GETTIMEOFDAY_H_
 
-#if WINAPI_FAMILY
+#if WINAPI_FAMILY_APP
 struct timeval {
 	long    tv_sec;         /* seconds */
 	long    tv_usec;        /* and microseconds */
