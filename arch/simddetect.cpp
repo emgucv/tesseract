@@ -43,7 +43,8 @@ bool SIMDDetect::sse_available_;
 // Constructor.
 // Tests the architecture in a system-dependent way to detect AVX, SSE and
 // any other available SIMD equipment.
-// __GNUC__ is also defined by compilers that include GNU extensions such as clang.
+// __GNUC__ is also defined by compilers that include GNU extensions such as
+// clang.
 SIMDDetect::SIMDDetect() {
 #if defined(X86_BUILD)
 # if defined(__GNUC__)
