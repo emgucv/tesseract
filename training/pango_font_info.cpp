@@ -25,18 +25,6 @@
 #if (defined __MINGW32__) || (defined __CYGWIN__)
 // workaround for stdlib.h and putenv
 #undef __STRICT_ANSI__
-
-#if (defined __MINGW32__)
-#include "strcasestr.h"
-#elif !defined(_GNU_SOURCE)
-// needed for strcasestr in string.h
-#define _GNU_SOURCE
-#endif
-
-#elif defined(_MSC_VER)
-#include "strcasestr.h"
-#define strncasecmp _strnicmp
-#define strcasecmp _stricmp
 #endif
 
 #include <stdlib.h>
@@ -100,10 +88,6 @@ PangoFontInfo::PangoFontInfo(const string& desc)
 
 void PangoFontInfo::Clear() {
   font_size_ = 0;
-  is_bold_ = false;
-  is_italic_ = false;
-  is_smallcaps_ = false;
-  is_monospace_ = false;
   family_name_.clear();
   font_type_ = UNKNOWN;
   if (desc_) {
@@ -184,29 +168,6 @@ static void ListFontFamilies(PangoFontFamily*** families,
   pango_font_map_list_families(font_map, families, n_families);
 }
 
-// Inspects whether a given font family is monospace. If the font is not
-// available, it cannot make a decision and returns false by default.
-static bool IsMonospaceFontFamily(const char* family_name) {
-  PangoFontFamily** families = 0;
-  int n_families = 0;
-  bool is_monospace = false;
-  ListFontFamilies(&families, &n_families);
-  ASSERT_HOST(n_families > 0);
-  bool found = false;
-  for (int i = 0; i < n_families; ++i) {
-    if (!strcasecmp(family_name, pango_font_family_get_name(families[i]))) {
-      is_monospace = pango_font_family_is_monospace(families[i]);
-      found = true;
-      break;
-    }
-  }
-  if (!found) {
-    tlog(1, "Could not find monospace property of family %s\n", family_name);
-  }
-  g_free(families);
-  return is_monospace;
-}
-
 bool PangoFontInfo::ParseFontDescription(const PangoFontDescription *desc) {
   Clear();
   const char* family = pango_font_description_get_family(desc);
@@ -219,7 +180,6 @@ bool PangoFontInfo::ParseFontDescription(const PangoFontDescription *desc) {
   }
   family_name_ = string(family);
   desc_ = pango_font_description_copy(desc);
-  is_monospace_ = IsMonospaceFontFamily(family);
 
   // Set font size in points
   font_size_ = pango_font_description_get_size(desc);
@@ -227,17 +187,6 @@ bool PangoFontInfo::ParseFontDescription(const PangoFontDescription *desc) {
     font_size_ /= PANGO_SCALE;
   }
 
-  PangoStyle style = pango_font_description_get_style(desc);
-  is_italic_ = (PANGO_STYLE_ITALIC == style ||
-                PANGO_STYLE_OBLIQUE == style);
-  is_smallcaps_ = (pango_font_description_get_variant(desc)
-                   == PANGO_VARIANT_SMALL_CAPS);
-
-  is_bold_ = (pango_font_description_get_weight(desc) >= PANGO_WEIGHT_BOLD);
-  // We don't have a way to detect whether a font is of type Fraktur. The fonts
-  // we currently use all have "Fraktur" in their family name, so we do a
-  // fragile but functional check for that here.
-  is_fraktur_ = (strcasestr(family, "Fraktur") != nullptr);
   return true;
 }
 
@@ -673,8 +622,8 @@ void FontUtils::GetAllRenderableCharacters(const std::vector<string>& fonts,
                                            std::vector<bool>* unichar_bitmap) {
   // Form the union of coverage maps from the fonts
   PangoCoverage* all_coverage = pango_coverage_new();
-  tlog(1, "Processing %d fonts\n", fonts.size());
-  for (int i = 0; i < fonts.size(); ++i) {
+  tlog(1, "Processing %u fonts\n", static_cast<unsigned>(fonts.size()));
+  for (unsigned i = 0; i < fonts.size(); ++i) {
     PangoFontInfo font_info(fonts[i]);
     PangoCoverage* coverage =
         pango_font_get_coverage(font_info.ToPangoFont(), nullptr);
@@ -738,7 +687,7 @@ string FontUtils::BestFonts(
   int most_ok_chars = 0;
   int best_raw_score = 0;
   const std::vector<string>& font_names = FontUtils::ListAvailableFonts();
-  for (int i = 0; i < font_names.size(); ++i) {
+  for (unsigned i = 0; i < font_names.size(); ++i) {
     std::vector<bool> ch_flags;
     int raw_score = 0;
     int ok_chars = FontScore(ch_map, font_names[i], &raw_score, &ch_flags);
@@ -763,7 +712,7 @@ string FontUtils::BestFonts(
   int override_enough = static_cast<int>(most_ok_chars * kMinWeightedFraction);
 
   string font_list;
-  for (int i = 0; i < font_names.size(); ++i) {
+  for (unsigned i = 0; i < font_names.size(); ++i) {
     int score = font_scores[i];
     int raw_score = raw_scores[i];
     if ((score >= least_good_enough && raw_score >= least_raw_enough) ||
@@ -798,7 +747,7 @@ bool FontUtils::SelectFont(const char* utf8_word, const int utf8_len,
                            string* font_name, std::vector<string>* graphemes) {
   if (font_name) font_name->clear();
   if (graphemes) graphemes->clear();
-  for (int i = 0; i < all_fonts.size(); ++i) {
+  for (unsigned i = 0; i < all_fonts.size(); ++i) {
     PangoFontInfo font;
     std::vector<string> found_graphemes;
     ASSERT_HOST_MSG(font.ParseFontDescriptionName(all_fonts[i]),

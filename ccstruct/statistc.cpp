@@ -1,5 +1,5 @@
 /**********************************************************************
- * File:        statistc.c  (Formerly stats.c)
+ * File:        statistc.cpp  (Formerly stats.c)
  * Description: Simple statistical package for integer values.
  * Author:          Ray Smith
  * Created:         Mon Feb 04 16:56:05 GMT 1991
@@ -772,8 +772,8 @@ void swap_entries(void *array,   // array of entries
   char *ptr2;
   size_t count;                  // of bytes
 
-  ptr1 = reinterpret_cast<char*>(array) + index1 * size;
-  ptr2 = reinterpret_cast<char*>(array) + index2 * size;
+  ptr1 = static_cast<char*>(array) + index1 * size;
+  ptr2 = static_cast<char*>(array) + index2 * size;
   for (count = 0; count < size; count++) {
     tmp = *ptr1;
     *ptr1++ = *ptr2;

@@ -1,7 +1,7 @@
 /* -*-C-*-
  ********************************************************************************
  *
- * File:        trie.c  (Formerly trie.c)
+ * File:         trie.cpp  (Formerly trie.c)
  * Description:  Functions to build a trie data structure.
  * Author:       Mark Seaman, OCR Technology
  * Created:      Fri Oct 16 14:37:00 1987
@@ -281,8 +281,8 @@ NODE_REF Trie::new_dawg_node() {
 
 // Sort function to sort words by decreasing order of length.
 static int sort_strings_by_dec_length(const void* v1, const void* v2) {
-  const STRING* s1 = reinterpret_cast<const STRING*>(v1);
-  const STRING* s2 = reinterpret_cast<const STRING*>(v2);
+  const STRING* s1 = static_cast<const STRING*>(v1);
+  const STRING* s2 = static_cast<const STRING*>(v2);
   return s2->length() - s1->length();
 }
 
@@ -572,7 +572,7 @@ bool Trie::eliminate_redundant_edges(NODE_REF node,
                                      const EDGE_RECORD &edge1,
                                      const EDGE_RECORD &edge2) {
   if (debug_level_ > 1) {
-    tprintf("\nCollapsing node %d:\n", node);
+    tprintf("\nCollapsing node %" PRIi64 ":\n", node);
     print_node(node, MAX_NODE_EDGES_DISPLAY);
     tprintf("Candidate edges: ");
     print_edge_rec(edge1);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// File:        scrollview.cc
+// File:        scrollview.cpp
 // Description: ScrollView
 // Author:      Joern Wanke
 // Created:     Thu Nov 29 2007
@@ -322,7 +322,7 @@ void ScrollView::Initialize(const char* name, int x_pos, int y_pos, int x_size,
 
 /// Sits and waits for events on this window.
 void* ScrollView::StartEventHandler(void* a) {
-  ScrollView* sv = reinterpret_cast<ScrollView*>(a);
+  ScrollView* sv = static_cast<ScrollView*>(a);
   SVEvent* new_event;
 
   do {

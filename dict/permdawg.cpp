@@ -1,7 +1,7 @@
 /* -*-C-*-
  ********************************************************************************
  *
- * File:        permdawg.c  (Formerly permdawg.c)
+ * File:         permdawg.cpp  (Formerly permdawg.c)
  * Description:  Scale word choices by a dictionary
  * Author:       Mark Seaman, OCR Technology
  * Created:      Fri Oct 16 14:37:00 1987
@@ -53,7 +53,7 @@ void Dict::go_deeper_dawg_fxn(
     int char_choice_index, const CHAR_FRAGMENT_INFO *prev_char_frag_info,
     bool word_ending, WERD_CHOICE *word, float certainties[], float *limit,
     WERD_CHOICE *best_choice, int *attempts_left, void *void_more_args) {
-  DawgArgs *more_args = reinterpret_cast<DawgArgs*>(void_more_args);
+  DawgArgs *more_args = static_cast<DawgArgs*>(void_more_args);
   word_ending = (char_choice_index == char_choices.size()-1);
   int word_index = word->length() - 1;
   if (best_choice->rating() < *limit) return;

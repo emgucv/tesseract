@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// File:        maxpool.h
+// File:        maxpool.cpp
 // Description: Standard Max-Pooling layer.
 // Author:      Ray Smith
 // Created:     Tue Mar 18 16:28:18 PST 2014
@@ -31,9 +31,8 @@ Maxpool::~Maxpool() {
 }
 
 // Reads from the given file. Returns false in case of error.
-// If swap is true, assumes a big/little-endian swap is needed.
-bool Maxpool::DeSerialize(bool swap, TFile* fp) {
-  bool result = Reconfig::DeSerialize(swap, fp);
+bool Maxpool::DeSerialize(TFile* fp) {
+  bool result = Reconfig::DeSerialize(fp);
   no_ = ni_;
   return result;
 }

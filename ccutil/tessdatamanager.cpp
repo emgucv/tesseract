@@ -33,13 +33,6 @@
 
 namespace tesseract {
 
-// Lazily loads from the the given filename. Won't actually read the file
-// until it needs it.
-void TessdataManager::LoadFileLater(const char *data_file_name) {
-  Clear();
-  data_file_name_ = data_file_name;
-}
-
 bool TessdataManager::Init(const char *data_file_name) {
   GenericVector<char> data;
   if (reader_ == nullptr) {
@@ -59,11 +52,13 @@ bool TessdataManager::LoadMemBuffer(const char *name, const char *data,
   inT32 num_entries = TESSDATA_NUM_ENTRIES;
   if (fp.FRead(&num_entries, sizeof(num_entries), 1) != 1) return false;
   swap_ = num_entries > kMaxNumTessdataEntries || num_entries < 0;
+  fp.set_swap(swap_);
   if (swap_) ReverseN(&num_entries, sizeof(num_entries));
+  if (num_entries > kMaxNumTessdataEntries || num_entries < 0) return false;
   GenericVector<inT64> offset_table;
-  offset_table.init_to_size(num_entries, -1);
-  if (fp.FReadEndian(&offset_table[0], sizeof(offset_table[0]), num_entries,
-                     swap_) != num_entries)
+  offset_table.resize_no_init(num_entries);
+  if (fp.FReadEndian(&offset_table[0], sizeof(offset_table[0]), num_entries) !=
+      num_entries)
     return false;
   for (int i = 0; i < num_entries && i < TESSDATA_NUM_ENTRIES; ++i) {
     if (offset_table[i] >= 0) {
@@ -71,20 +66,12 @@ bool TessdataManager::LoadMemBuffer(const char *name, const char *data,
       int j = i + 1;
       while (j < num_entries && offset_table[j] == -1) ++j;
       if (j < num_entries) entry_size = offset_table[j] - offset_table[i];
-      entries_[i].init_to_size(entry_size, 0);
+      entries_[i].resize_no_init(entry_size);
       if (fp.FRead(&entries_[i][0], 1, entry_size) != entry_size) return false;
     }
   }
   is_loaded_ = true;
   return true;
-}
-
-// Overwrites a single entry of the given type.
-void TessdataManager::OverwriteEntry(TessdataType type, const char *data,
-                                     int size) {
-  is_loaded_ = true;
-  entries_[type].init_to_size(size, 0);
-  memcpy(&entries_[type][0], data, size);
 }
 
 // Saves to the given filename.
@@ -152,6 +139,7 @@ bool TessdataManager::GetComponent(TessdataType type, TFile *fp) {
   if (!is_loaded_ && !Init(data_file_name_.string())) return false;
   if (entries_[type].empty()) return false;
   fp->Open(&entries_[type][0], entries_[type].size());
+  fp->set_swap(swap_);
   return true;
 }
 
