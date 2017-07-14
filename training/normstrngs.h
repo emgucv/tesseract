@@ -21,36 +21,52 @@
 #ifndef TESSERACT_CCUTIL_NORMSTRNGS_H_
 #define TESSERACT_CCUTIL_NORMSTRNGS_H_
 
-#include "genericvector.h"
-#include "strngs.h"
+#include <string>
+#include <vector>
 
-typedef signed int char32;
+#include "validator.h"
 
 namespace tesseract {
 
-// UTF-8 to UTF-32 conversion function.
-void UTF8ToUTF32(const char* utf8_str, GenericVector<char32>* str32);
+// The standard unicode normalizations.
+enum class UnicodeNormMode {
+  kNFD,
+  kNFC,
+  kNFKD,
+  kNFKC,
+};
 
-// UTF-32 to UTF-8 convesion function.
-void UTF32ToUTF8(const GenericVector<char32>& str32, STRING* utf8_str);
+// To normalize away differences in punctuation that are ambiguous, like
+// curly quotes and different widths of dash.
+enum class OCRNorm {
+  kNone,
+  kNormalize,
+};
 
-// Normalize a single char32 using NFKC + OCR-specific transformations.
-// NOTE that proper NFKC may require multiple characters as input. The
-// assumption of this function is that the input is already as fully composed
-// as it can be, but may require some compatibility normalizations or just
-// OCR evaluation related normalizations.
-void NormalizeChar32(char32 ch, bool decompose, GenericVector<char32>* str);
+// To validate and normalize away some subtle differences that can occur in
+// Indic scripts, eg ensuring that an explicit virama is always followed by
+// a zero-width non-joiner.
+enum class GraphemeNorm {
+  kNone,
+  kNormalize,
+};
 
-// Normalize a UTF8 string. Same as above, but for UTF8-encoded strings, that
-// can contain multiple UTF32 code points.
-STRING NormalizeUTF8String(bool decompose, const char* str8);
-// Default behavior is to compose, until it is proven that decomposed benefits
-// at least one language.
-inline STRING NormalizeUTF8String(const char* str8) {
-  return NormalizeUTF8String(false, str8);
-}
+// Normalizes a UTF8 string according to the given modes. Returns true on
+// success. If false is returned, some failure or invalidity was present, and
+// the result string is produced on a "best effort" basis.
+bool NormalizeUTF8String(UnicodeNormMode u_mode, OCRNorm ocr_normalize,
+                         GraphemeNorm grapheme_normalize, const char* str8,
+                         string* normalized);
+// Normalizes a UTF8 string according to the given modes and splits into
+// graphemes according to g_mode. Returns true on success. If false is returned,
+// some failure or invalidity was present, and the result string is produced on
+// a "best effort" basis.
+bool NormalizeCleanAndSegmentUTF8(UnicodeNormMode u_mode, OCRNorm ocr_normalize,
+                                  GraphemeNormMode g_mode, bool report_errors,
+                                  const char* str8,
+                                  std::vector<string>* graphemes);
 
-// Apply just the OCR-specific normalizations and return the normalized char.
+// Applies just the OCR-specific normalizations and return the normalized char.
 char32 OCRNormalize(char32 ch);
 
 // Returns true if the OCRNormalized ch1 and ch2 are the same.
@@ -67,11 +83,11 @@ bool IsUTF8Whitespace(const char* text);
 
 // Returns the length of bytes of the prefix of 'text' that have the White_Space
 // unicode property.
-int SpanUTF8Whitespace(const char* text);
+unsigned int SpanUTF8Whitespace(const char* text);
 
 // Returns the length of bytes of the prefix of 'text' that DO NOT have the
 // White_Space unicode property.
-int SpanUTF8NotWhitespace(const char* text);
+unsigned int SpanUTF8NotWhitespace(const char* text);
 
 // Returns true if the char is interchange valid i.e. no C0 or C1 control codes
 // (other than CR LF HT FF) and no non-characters.

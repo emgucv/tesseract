@@ -25,6 +25,7 @@
 #include "host.h"
 #include "strngs.h"
 #include "tprintf.h"
+#include "version.h"
 
 static const char kTrainedDataSuffix[] = "traineddata";
 
@@ -51,6 +52,9 @@ static const char kLSTMModelFileSuffix[] = "lstm";
 static const char kLSTMPuncDawgFileSuffix[] = "lstm-punc-dawg";
 static const char kLSTMSystemDawgFileSuffix[] = "lstm-word-dawg";
 static const char kLSTMNumberDawgFileSuffix[] = "lstm-number-dawg";
+static const char kLSTMUnicharsetFileSuffix[] = "lstm-unicharset";
+static const char kLSTMRecoderFileSuffix[] = "lstm-recoder";
+static const char kVersionFileSuffix[] = "version";
 
 namespace tesseract {
 
@@ -76,6 +80,9 @@ enum TessdataType {
   TESSDATA_LSTM_PUNC_DAWG,      // 18
   TESSDATA_LSTM_SYSTEM_DAWG,    // 19
   TESSDATA_LSTM_NUMBER_DAWG,    // 20
+  TESSDATA_LSTM_UNICHARSET,     // 21
+  TESSDATA_LSTM_RECODER,        // 22
+  TESSDATA_VERSION,             // 23
 
   TESSDATA_NUM_ENTRIES
 };
@@ -106,6 +113,9 @@ static const char *const kTessdataFileSuffixes[] = {
     kLSTMPuncDawgFileSuffix,      // 18
     kLSTMSystemDawgFileSuffix,    // 19
     kLSTMNumberDawgFileSuffix,    // 20
+    kLSTMUnicharsetFileSuffix,    // 21
+    kLSTMRecoderFileSuffix,       // 22
+    kVersionFileSuffix,           // 23
 };
 
 /**
@@ -120,14 +130,21 @@ static const int kMaxNumTessdataEntries = 1000;
 
 class TessdataManager {
  public:
-  TessdataManager() : reader_(nullptr), is_loaded_(false), swap_(false) {}
+  TessdataManager() : reader_(nullptr), is_loaded_(false), swap_(false) {
+    SetVersionString(TESSERACT_VERSION_STR);
+  }
   explicit TessdataManager(FileReader reader)
-      : reader_(reader), is_loaded_(false), swap_(false) {}
+      : reader_(reader), is_loaded_(false), swap_(false) {
+    SetVersionString(TESSERACT_VERSION_STR);
+  }
   ~TessdataManager() {}
 
   bool swap() const { return swap_; }
   bool is_loaded() const { return is_loaded_; }
 
+  // Lazily loads from the the given filename. Won't actually read the file
+  // until it needs it.
+  void LoadFileLater(const char *data_file_name);
   /**
    * Opens and reads the given data file right now.
    * @return true on success.
@@ -136,6 +153,8 @@ class TessdataManager {
   // Loads from the given memory buffer as if a file, remembering name as some
   // arbitrary source id for caching.
   bool LoadMemBuffer(const char *name, const char *data, int size);
+  // Overwrites a single entry of the given type.
+  void OverwriteEntry(TessdataType type, const char *data, int size);
 
   // Saves to the given filename.
   bool SaveFile(const STRING &filename, FileWriter writer) const;
@@ -147,9 +166,21 @@ class TessdataManager {
   // Prints a directory of contents.
   void Directory() const;
 
+  // Returns true if the component requested is present.
+  bool IsComponentAvailable(TessdataType type) const {
+    return !entries_[type].empty();
+  }
   // Opens the given TFile pointer to the given component type.
   // Returns false in case of failure.
   bool GetComponent(TessdataType type, TFile *fp);
+  // As non-const version except it can't load the component if not already
+  // loaded.
+  bool GetComponent(TessdataType type, TFile *fp) const;
+
+  // Returns the current version string.
+  string VersionString() const;
+  // Sets the version string to the given v_str.
+  void SetVersionString(const string &v_str);
 
   // Returns true if the base Tesseract components are present.
   bool IsBaseAvailable() const {

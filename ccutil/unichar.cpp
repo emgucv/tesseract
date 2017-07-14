@@ -24,6 +24,8 @@
 
 #define UNI_MAX_LEGAL_UTF32 0x0010FFFF
 
+namespace tesseract {
+
 // Construct from a utf8 string. If len<0 then the string is null terminated.
 // If the string is too long to fit in the UNICHAR then it takes only what
 // will fit. Checks for illegal input and stops at an illegal sequence.
@@ -206,20 +208,37 @@ UNICHAR::const_iterator UNICHAR::end(const char* utf8_str, const int len) {
 }
 
 // Converts a utf-8 string to a vector of unicodes.
-// Returns false if the input contains invalid UTF-8, and replaces
-// the rest of the string with a single space.
-bool UNICHAR::UTF8ToUnicode(const char* utf8_str,
-                            GenericVector<int>* unicodes) {
+// Returns an empty vector if the input contains invalid UTF-8.
+/* static */
+std::vector<char32> UNICHAR::UTF8ToUTF32(const char* utf8_str) {
   const int utf8_length = strlen(utf8_str);
+  std::vector<char32> unicodes;
+  unicodes.reserve(utf8_length);
   const_iterator end_it(end(utf8_str, utf8_length));
   for (const_iterator it(begin(utf8_str, utf8_length)); it != end_it; ++it) {
     if (it.is_legal()) {
-      unicodes->push_back(*it);
+      unicodes.push_back(*it);
     } else {
-      unicodes->push_back(' ');
-      return false;
+      unicodes.clear();
+      return unicodes;
     }
   }
-  return true;
+  return unicodes;
 }
 
+// Returns an empty string if the input contains an invalid unicode.
+string UNICHAR::UTF32ToUTF8(const std::vector<char32>& str32) {
+  string utf8_str;
+  for (char32 ch : str32) {
+    UNICHAR uni_ch(ch);
+    int step;
+    if (uni_ch.utf8_len() > 0 && (step = utf8_step(uni_ch.utf8())) > 0) {
+      utf8_str.append(uni_ch.utf8(), step);
+    } else {
+      return "";
+    }
+  }
+  return utf8_str;
+}
+
+}  // namespace tesseract

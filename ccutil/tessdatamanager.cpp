@@ -33,6 +33,13 @@
 
 namespace tesseract {
 
+// Lazily loads from the the given filename. Won't actually read the file
+// until it needs it.
+void TessdataManager::LoadFileLater(const char *data_file_name) {
+  Clear();
+  data_file_name_ = data_file_name;
+}
+
 bool TessdataManager::Init(const char *data_file_name) {
   GenericVector<char> data;
   if (reader_ == nullptr) {
@@ -46,6 +53,7 @@ bool TessdataManager::Init(const char *data_file_name) {
 // Loads from the given memory buffer as if a file.
 bool TessdataManager::LoadMemBuffer(const char *name, const char *data,
                                     int size) {
+  Clear();
   data_file_name_ = name;
   TFile fp;
   fp.Open(data, size);
@@ -70,8 +78,19 @@ bool TessdataManager::LoadMemBuffer(const char *name, const char *data,
       if (fp.FRead(&entries_[i][0], 1, entry_size) != entry_size) return false;
     }
   }
+  if (entries_[TESSDATA_VERSION].empty()) {
+    SetVersionString("Pre-4.0.0");
+  }
   is_loaded_ = true;
   return true;
+}
+
+// Overwrites a single entry of the given type.
+void TessdataManager::OverwriteEntry(TessdataType type, const char *data,
+                                     int size) {
+  is_loaded_ = true;
+  entries_[type].resize_no_init(size);
+  memcpy(&entries_[type][0], data, size);
 }
 
 // Saves to the given filename.
@@ -123,6 +142,7 @@ void TessdataManager::Clear() {
 
 // Prints a directory of contents.
 void TessdataManager::Directory() const {
+  tprintf("Version string:%s\n", VersionString().c_str());
   int offset = TESSDATA_NUM_ENTRIES * sizeof(inT64);
   for (int i = 0; i < TESSDATA_NUM_ENTRIES; ++i) {
     if (!entries_[i].empty()) {
@@ -137,10 +157,30 @@ void TessdataManager::Directory() const {
 // Returns false in case of failure.
 bool TessdataManager::GetComponent(TessdataType type, TFile *fp) {
   if (!is_loaded_ && !Init(data_file_name_.string())) return false;
+  const TessdataManager *const_this = this;
+  return const_this->GetComponent(type, fp);
+}
+
+// As non-const version except it can't load the component if not already
+// loaded.
+bool TessdataManager::GetComponent(TessdataType type, TFile *fp) const {
+  ASSERT_HOST(is_loaded_);
   if (entries_[type].empty()) return false;
   fp->Open(&entries_[type][0], entries_[type].size());
   fp->set_swap(swap_);
   return true;
+}
+
+// Returns the current version string.
+string TessdataManager::VersionString() const {
+  return string(&entries_[TESSDATA_VERSION][0],
+                entries_[TESSDATA_VERSION].size());
+}
+
+// Sets the version string to the given v_str.
+void TessdataManager::SetVersionString(const string &v_str) {
+  entries_[TESSDATA_VERSION].resize_no_init(v_str.size());
+  memcpy(&entries_[TESSDATA_VERSION][0], v_str.data(), v_str.size());
 }
 
 bool TessdataManager::CombineDataFiles(
