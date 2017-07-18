@@ -219,6 +219,7 @@ projects:
             - training/lstmtester.*
             - training/normstrngs.*
             - training/unicharset_training_utils.*
+            - training/validat.*
         include_directories: training
         dependencies:
             - common_training
