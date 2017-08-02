@@ -50,12 +50,6 @@
 #include "unicharset.h"
 #include "util.h"
 
-#ifdef USE_STD_NAMESPACE
-using std::make_pair;
-using std::map;
-using std::pair;
-#endif
-
 // A number with which to initialize the random number generator.
 const int kRandomSeed = 0x18273645;
 
@@ -415,9 +409,7 @@ using tesseract::SpanUTF8NotWhitespace;
 using tesseract::SpanUTF8Whitespace;
 using tesseract::StringRenderer;
 
-int main(int argc, char** argv) {
-  tesseract::ParseCommandLineFlags(argv[0], &argc, &argv, true);
-
+int Main() {
   if (FLAGS_list_available_fonts) {
     const std::vector<string>& all_fonts = FontUtils::ListAvailableFonts();
     for (unsigned int i = 0; i < all_fonts.size(); ++i) {
@@ -549,8 +541,9 @@ int main(int argc, char** argv) {
       const char *curr_pos = str8 + offsets[i].first;
       int ngram_len = offsets[i].second;
       // Skip words that contain characters not in found in unicharset.
+      string cleaned = UNICHARSET::CleanupString(curr_pos, ngram_len);
       if (!FLAGS_unicharset_file.empty() &&
-          !unicharset.encodable_string(curr_pos, nullptr)) {
+          !unicharset.encodable_string(cleaned.c_str(), nullptr)) {
         continue;
       }
       rand_utf8.append(curr_pos, ngram_len);
@@ -670,4 +663,9 @@ int main(int argc, char** argv) {
   }
 
   return 0;
+}
+
+int main(int argc, char** argv) {
+  tesseract::ParseCommandLineFlags(argv[0], &argc, &argv, true);
+  Main();
 }
