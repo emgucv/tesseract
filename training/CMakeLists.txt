@@ -11,7 +11,7 @@ if (CPPAN_BUILD)
 endif()
 
 # experimental
-if (MSVC AND NOT CPPAN_BUILD)
+if (MSVC AND NOT CPPAN_BUILD AND NOT USE_SYSTEM_ICU)
     include(CheckTypeSize)
     check_type_size("void *" SIZEOF_VOID_P)
 
@@ -56,7 +56,7 @@ endif()
 # experimental
 
 if (NOT CPPAN_BUILD)
-find_package(ICU COMPONENTS uc i18n)
+    find_package(ICU COMPONENTS uc i18n)
 endif()
 
 ########################################
@@ -146,15 +146,6 @@ project_group               (shapeclustering "Training Tools")
 
 
 ########################################
-# EXECUTABLE unicharset_extractor
-########################################
-
-add_executable              (unicharset_extractor unicharset_extractor.cpp)
-target_link_libraries       (unicharset_extractor libtesseract tessopt)
-project_group               (unicharset_extractor "Training Tools")
-
-
-########################################
 # EXECUTABLE wordlist2dawg
 ########################################
 
@@ -235,6 +226,15 @@ project_group               (lstmtraining "Training Tools")
 add_executable              (set_unicharset_properties set_unicharset_properties.cpp)
 target_link_libraries       (set_unicharset_properties unicharset_training)
 project_group               (set_unicharset_properties "Training Tools")
+
+
+########################################
+# EXECUTABLE unicharset_extractor
+########################################
+
+add_executable              (unicharset_extractor unicharset_extractor.cpp)
+target_link_libraries       (unicharset_extractor libtesseract tessopt unicharset_training)
+project_group               (unicharset_extractor "Training Tools")
 
 
 ########################################

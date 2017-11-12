@@ -140,11 +140,8 @@ int LSTM::InitWeights(float range, TRand* randomizer) {
   return num_weights_;
 }
 
-// Changes the number of outputs to the size of the given code_map, copying
-// the old weight matrix entries for each output from code_map[output] where
-// non-negative, and uses the mean (over all outputs) of the existing weights
-// for all outputs with negative code_map entries. Returns the new number of
-// weights. Only operates on Softmax layers with old_no outputs.
+// Recursively searches the network for softmaxes with old_no outputs,
+// and remaps their outputs according to code_map. See network.h for details.
 int LSTM::RemapOutputs(int old_no, const std::vector<int>& code_map) {
   if (softmax_ != NULL) {
     num_weights_ -= softmax_->num_weights();
@@ -263,7 +260,9 @@ void LSTM::Forward(bool debug, const NetworkIO& input,
   if (softmax_ != NULL) {
     softmax_output.Init(no_, scratch);
     ZeroVector<double>(no_, softmax_output);
-    if (input.int_mode()) int_output.Resize2d(true, 1, ns_, scratch);
+    int rounded_softmax_inputs = gate_weights_[CI].RoundInputs(ns_);
+    if (input.int_mode())
+      int_output.Resize2d(true, 1, rounded_softmax_inputs, scratch);
     softmax_->SetupForward(input, NULL);
   }
   NetworkScratch::FloatVec curr_input;
@@ -367,7 +366,7 @@ void LSTM::Forward(bool debug, const NetworkIO& input,
     if (IsTraining()) state_.WriteTimeStep(t, curr_state);
     if (softmax_ != NULL) {
       if (input.int_mode()) {
-        int_output->WriteTimeStep(0, curr_output);
+        int_output->WriteTimeStepPart(0, 0, ns_, curr_output);
         softmax_->ForwardTimeStep(NULL, int_output->i(0), t, softmax_output);
       } else {
         softmax_->ForwardTimeStep(curr_output, NULL, t, softmax_output);
@@ -723,7 +722,8 @@ void LSTM::PrintDW() {
 
 // Resizes forward data to cope with an input image of the given width.
 void LSTM::ResizeForward(const NetworkIO& input) {
-  source_.Resize(input, na_);
+  int rounded_inputs = gate_weights_[CI].RoundInputs(na_);
+  source_.Resize(input, rounded_inputs);
   which_fg_.ResizeNoInit(input.Width(), ns_);
   if (IsTraining()) {
     state_.ResizeFloat(input, ns_);

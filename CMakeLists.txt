@@ -50,6 +50,7 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.cppan)
     if (NOT Leptonica_DIR AND NOT MSVC)
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(Leptonica REQUIRED lept>=${MINIMUM_LEPTONICA_VERSION})
+        link_directories(${Leptonica_LIBRARY_DIRS})
     else()
         find_package(Leptonica ${MINIMUM_LEPTONICA_VERSION} REQUIRED CONFIG)
     endif()
@@ -211,6 +212,13 @@ if (WIN32)
             ${CMAKE_CURRENT_SOURCE_DIR}/arch/dotproductavx.cpp
             PROPERTIES COMPILE_FLAGS "/arch:AVX")
     endif()
+else()
+    set_source_files_properties(
+            ${CMAKE_CURRENT_SOURCE_DIR}/arch/dotproductsse.cpp
+            PROPERTIES COMPILE_FLAGS "-msse4.1")
+    set_source_files_properties(
+            ${CMAKE_CURRENT_SOURCE_DIR}/arch/dotproductavx.cpp
+            PROPERTIES COMPILE_FLAGS "-mavx")
 endif()
 
 add_library                     (libtesseract ${LIBRARY_TYPE} ${tesseract_src} ${tesseract_hdr})
@@ -227,6 +235,8 @@ set_target_properties           (libtesseract PROPERTIES SOVERSION ${VERSION_MAJ
 if (WIN32)
 set_target_properties           (libtesseract PROPERTIES OUTPUT_NAME tesseract${VERSION_MAJOR}${VERSION_MINOR})
 set_target_properties           (libtesseract PROPERTIES DEBUG_OUTPUT_NAME tesseract${VERSION_MAJOR}${VERSION_MINOR}d)
+else()
+set_target_properties           (libtesseract PROPERTIES OUTPUT_NAME tesseract)
 endif()
 
 if (NOT CPPAN_BUILD)
@@ -251,6 +261,12 @@ add_executable                  (tesseract ${tesseractmain_src})
 target_link_libraries           (tesseract libtesseract)
 
 ########################################
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/googletest/CMakeLists.txt)
+    add_subdirectory(googletest)
+    add_executable(tesseract_tests tests/tesseracttests.cpp)
+    target_link_libraries(tesseract_tests gtest_main)
+endif()
 
 if (BUILD_TRAINING_TOOLS)
 add_subdirectory(training)
@@ -310,6 +326,7 @@ install(FILES
     ccutil/unicharcompress.h 
     ccutil/unicharmap.h 
     ccutil/unicharset.h
+    ccutil/version.h
 
     #from lstm/makefile.am
     lstm/convolve.h

@@ -66,7 +66,7 @@ AC_SUBST([GENERIC_VERSION])
 # ----------------------------------------
 
 # Do not require README file (we use README.md)
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADERS([config_auto.h:config/config.h.in])
 AM_MAINTAINER_MODE
 
@@ -117,11 +117,17 @@ esac
 
 ## Checks for supported compiler options.
 AM_CONDITIONAL([AVX_OPT], false)
+AM_CONDITIONAL([AVX2_OPT], false)
 AM_CONDITIONAL([SSE41_OPT], false)
 
 AX_CHECK_COMPILE_FLAG([-mavx], [avx=true], [avx=false])
 if $avx; then
     AM_CONDITIONAL([AVX_OPT], true)
+fi
+
+AX_CHECK_COMPILE_FLAG([-mavx2], [avx2=true], [avx2=false])
+if $avx2; then
+    AM_CONDITIONAL([AVX2_OPT], true)
 fi
 
 AX_CHECK_COMPILE_FLAG([-msse4.1], [sse41=true], [sse41=false])
@@ -260,15 +266,6 @@ AC_ARG_ENABLE([visibility],
     [enable_visibility="no"])
 AC_MSG_RESULT([$enable_visibility])
 AM_CONDITIONAL([VISIBILITY], [test "$enable_visibility" = "yes"])
-
-# check whether to build multiple libraries
-AC_MSG_CHECKING([--enable-multiple-libraries argument])
-AC_ARG_ENABLE([multiple-libraries],
-    [AS_HELP_STRING([--enable-multiple-libraries],[enable multiple libraries (default=no)])],
-    [enable_mlibs=$enableval],
-    [enable_mlibs="no"])
-AC_MSG_RESULT([$enable_mlibs])
-AM_CONDITIONAL([USING_MULTIPLELIBS], [test "$enable_mlibs" = "yes"])
 
 # Check if tessdata-prefix is disabled
 AC_MSG_CHECKING([whether to use tessdata-prefix])
@@ -501,6 +498,7 @@ AC_CONFIG_FILES([tessdata/Makefile])
 AC_CONFIG_FILES([tessdata/configs/Makefile])
 AC_CONFIG_FILES([tessdata/tessconfigs/Makefile])
 AC_CONFIG_FILES([testing/Makefile])
+AC_CONFIG_FILES([unittest/Makefile])
 AC_CONFIG_FILES([java/Makefile])
 AC_CONFIG_FILES([java/com/Makefile])
 AC_CONFIG_FILES([java/com/google/Makefile])
@@ -521,15 +519,16 @@ echo "$ sudo make install"
 # echo "$ sudo make install LANGS=\"eng ara deu\""
 # echo "  Or:"
 # echo "$ sudo make install-langs"
+echo ""
 
 AM_COND_IF([ENABLE_TRAINING],
-  [echo ""
-   echo "Training tools can be build and installed (after building of $PACKAGE_NAME) with:"
+  [
+   echo "Training tools can be built and installed with:"
    echo ""
    echo "$ make training"
    echo "$ sudo make training-install"
    echo ""],
-  [echo ""
+  [
    echo "You can not build training tools because of missing dependency."
    echo "Check configure output for details."
    echo ""]

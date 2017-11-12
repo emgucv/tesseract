@@ -99,7 +99,7 @@ class LSTMTrainer : public LSTMRecognizer {
 
   // Tries to deserialize a trainer from the given file and silently returns
   // false in case of failure. If old_traineddata is not null, then it is
-  // assumed that the character set is to be re-mapped from old_traininddata to
+  // assumed that the character set is to be re-mapped from old_traineddata to
   // the new, with consequent change in weight matrices etc.
   bool TryLoadingCheckpoint(const char* filename, const char* old_traineddata);
 
@@ -182,7 +182,8 @@ class LSTMTrainer : public LSTMRecognizer {
   // tesseract into memory ready for training. Returns false if nothing was
   // loaded.
   bool LoadAllTrainingData(const GenericVector<STRING>& filenames,
-                           CachingStrategy cache_strategy);
+                           CachingStrategy cache_strategy,
+                           bool randomly_rotate);
 
   // Keeps track of best and locally worst error rate, using internally computed
   // values. See MaintainCheckpointsSpecific for more detail.
@@ -409,6 +410,7 @@ class LSTMTrainer : public LSTMRecognizer {
   // Checkpoint filename.
   STRING checkpoint_name_;
   // Training data.
+  bool randomly_rotate_;
   DocumentCache training_data_;
   // Name to use when saving best_trainer_.
   STRING best_model_name_;
