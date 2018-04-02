@@ -27,7 +27,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#if ANDROID
+#include <tr1/functional>
+#else
 #include <functional>
+#endif
 #include <string>
 
 #include "host.h"
@@ -47,7 +51,11 @@ class TRand {
   }
   // Sets the seed using a hash of a string.
   void set_seed(const std::string& str) {
+#if ANDROID	
+    std::tr1::hash<std::string> hasher;
+#else  
     std::hash<std::string> hasher;
+#endif
     set_seed(static_cast<uinT64>(hasher(str)));
   }
 
