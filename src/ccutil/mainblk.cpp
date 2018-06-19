@@ -30,6 +30,11 @@
 #define VARDIR        "configs/" /**< variables files */
 #define EXTERN
 
+#ifdef WINAPI_FAMILY
+#include <Windows.h>
+#include <appmodel.h>
+#endif
+
 const ERRCODE NO_PATH =
 "Warning:explicit path for executable will not be used for configs";
 static const ERRCODE USAGE = "Usage";
@@ -53,7 +58,11 @@ namespace tesseract {
 void CCUtil::main_setup(const char *argv0, const char *basename) {
   imagebasename = basename;      /**< name of image */
 
+#if WINAPI_FAMILY_APP
+  char *tessdata_prefix = 0;
+#else
   char *tessdata_prefix = getenv("TESSDATA_PREFIX");
+#endif
 
   if (argv0 != nullptr && *argv0 != '\0') {
     /* Use tessdata prefix from the command line. */
@@ -61,13 +70,18 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
   } else if (tessdata_prefix) {
     /* Use tessdata prefix from the environment. */
     datadir = tessdata_prefix;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(WINAPI_FAMILY)
   } else if (datadir == nullptr || _access(datadir.string(), 0) != 0) {
+#endif
     /* Look for tessdata in directory of executable. */
     char drive[_MAX_DRIVE];
     char dir[_MAX_DIR];
     char path[_MAX_PATH];
+#ifdef WINAPI_FAMILY
+    DWORD length = 0;
+#else
     DWORD length = GetModuleFileName(nullptr, path, sizeof(path));
+#endif
     if (length > 0 && length < sizeof(path)) {
       errno_t result = _splitpath_s(path, drive, sizeof(drive),
                                     dir, sizeof(dir), nullptr, 0, nullptr, 0);

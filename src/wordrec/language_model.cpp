@@ -31,9 +31,10 @@
 #include "params.h"
 #include "params_training_featdef.h"
 
+
 namespace tesseract {
 
-#if (defined(_MSC_VER) && _MSC_VER < 1900) || defined(ANDROID)
+#if (defined(_MSC_VER) && _MSC_VER < 1900 && !defined(WINAPI_FAMILY)) || defined(ANDROID)
 static inline double log2(double n) {
   return log(n) / log(2.0);
 }
