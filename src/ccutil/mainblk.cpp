@@ -93,7 +93,7 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
       datadir += dir;
       datadir += "/tessdata";
     }
-#endif /* _WIN32 */
+
 #if defined(TESSDATA_PREFIX)
   } else {
 /* Use tessdata prefix which was compiled in. */
