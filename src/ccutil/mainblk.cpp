@@ -72,7 +72,6 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
     datadir = tessdata_prefix;
 #if defined(_WIN32) || defined(WINAPI_FAMILY)
   } else if (datadir == nullptr || _access(datadir.string(), 0) != 0) {
-#endif
     /* Look for tessdata in directory of executable. */
     char drive[_MAX_DRIVE];
     char dir[_MAX_DIR];
@@ -93,7 +92,9 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
       datadir += dir;
       datadir += "/tessdata";
     }
-
+  }
+#endif
+    
 #if defined(TESSDATA_PREFIX)
   } else {
 /* Use tessdata prefix which was compiled in. */
