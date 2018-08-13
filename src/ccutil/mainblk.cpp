@@ -91,8 +91,7 @@ void CCUtil::main_setup(const char *argv0, const char *basename) {
       datadir = drive;
       datadir += dir;
       datadir += "/tessdata";
-    }
-  }
+    }	
 #endif
     
 #if defined(TESSDATA_PREFIX)
