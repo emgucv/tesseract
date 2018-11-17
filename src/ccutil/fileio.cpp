@@ -86,7 +86,11 @@ std::string File::JoinPath(const std::string& prefix, const std::string& suffix)
 }
 
 bool File::Delete(const char* pathname) {
+#if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
   const int status = _unlink(pathname);
+#else
+  const int status = unlink(pathname);
+#endif
   if (status != 0) {
     tprintf("ERROR: Unable to delete file %s\n", pathname);
     return false;
