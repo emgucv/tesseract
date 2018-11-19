@@ -1159,8 +1159,10 @@ bool TessBaseAPI::ProcessPagesInternal(const char* filename,
     if (FILE* file = fopen(filename, "rb")) {
       fclose(file);
     } else {
+#ifdef WIN32
       fprintf(stderr, "Error, cannot read input file %s: %s\n",
               filename, strerror(errno));
+#endif			  
       return false;
     }
   }
