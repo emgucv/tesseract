@@ -103,7 +103,7 @@ class StrideMap {
   // Default copy constructor and operator= are OK to use here!
 
   // Sets up the stride for the given array of height, width pairs.
-  void SetStride(const std::vector<std::pair<int, int>>& h_w_pairs);
+  void SetStride(const std::vector< std::pair<int, int> >& h_w_pairs);
   // Scales width and height dimensions by the given factors.
   void ScaleXY(int x_factor, int y_factor);
   // Reduces width to 1, across the batch, whatever the input size.
