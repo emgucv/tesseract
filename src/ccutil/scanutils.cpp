@@ -28,6 +28,12 @@
 
 #include "scanutils.h"
 
+// workaround for "'off_t' was not declared in this scope" with -std=c++11
+// OSX has off_t defined, but HAVE_OFF_T is false...
+#if !defined(HAVE_OFF_T) && !__APPLE__
+typedef long off_t;
+#endif  // off_t
+
 enum Flags {
   FL_SPLAT  = 0x01,   // Drop the value, do not assign
   FL_INV    = 0x02,   // Character-set with inverse
@@ -129,7 +135,7 @@ static uintmax_t streamtoumax(FILE* s, int base) {
     v = v*base + d;
 
   ungetc(c, s);
-  return minus ? -v : v;
+  return minus ? 0 : v;
 }
 
 static double streamtofloat(FILE* s) {

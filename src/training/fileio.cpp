@@ -90,7 +90,7 @@ std::string File::JoinPath(const std::string& prefix, const std::string& suffix)
 }
 
 bool File::Delete(const char* pathname) {
-#if !defined(_WIN32) || defined(__MINGW32__)
+#if (!defined(_WIN32) || defined(__MINGW32__)) && ! ((defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP))
   const int status = unlink(pathname);
 #else
   const int status = _unlink(pathname);
@@ -107,11 +107,24 @@ bool File::Delete(const char* pathname) {
 bool File::DeleteMatchingFiles(const char* pattern) {
  WIN32_FIND_DATA data;
  BOOL result = TRUE;
+#if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
+ const int strBufferSize = 4096;
+ wchar_t w_string[strBufferSize];
+ MultiByteToWideChar(CP_ACP, 0, pattern, -1, w_string, strBufferSize);
+ HANDLE handle = FindFirstFile(w_string, &data);
+#else
  HANDLE handle = FindFirstFile(pattern, &data);
+#endif
  bool all_deleted = true;
  if (handle != INVALID_HANDLE_VALUE) {
    for (; result; result = FindNextFile(handle, &data)) {
+#if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
+      char datacFileName[strBufferSize];
+      sprintf(datacFileName, "%ws", data.cFileName);
+      all_deleted &= File::Delete(datacFileName);
+#else
       all_deleted &= File::Delete(data.cFileName);
+#endif
    }
    FindClose(handle);
  }
