@@ -21,6 +21,7 @@
 #include <memory>     // for std::unique_ptr
 #include <sstream>    // for std::stringstream
 #include "baseapi.h"  // for TessBaseAPI
+#include "config_auto.h"
 #ifdef _WIN32
 # include "host.h"    // windows.h for MultiByteToWideChar, ...
 #endif
