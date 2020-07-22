@@ -30,7 +30,7 @@
 
 // workaround for "'off_t' was not declared in this scope" with -std=c++11
 // OSX has off_t defined, but HAVE_OFF_T is false...
-#if !defined(HAVE_OFF_T) && !__APPLE__
+#if !defined(HAVE_OFF_T) && !__APPLE__ && !defined(__EMSCRIPTEN_major__)
 typedef long off_t;
 #endif  // off_t
 
