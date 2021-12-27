@@ -158,10 +158,10 @@ static void addAvailableLanguages(const std::string &datadir, const std::string 
 #ifdef _WIN32
   WIN32_FIND_DATA data;
 #if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
-	const int strBufferSize = 4096;
-	wchar_t* w_string = new wchar_t[strBufferSize];
-	MultiByteToWideChar(CP_ACP, 0, (datadir + base2 + "*").string(), -1, w_string, strBufferSize);
-	HANDLE handle = FindFirstFile(w_string, &data);
+  const int strBufferSize = 4096;
+  wchar_t w_string[strBufferSize];
+  MultiByteToWideChar(CP_ACP, 0, (datadir + base2 + "*").c_str(), -1, w_string, strBufferSize);
+  HANDLE handle = FindFirstFile(w_string, &data);
 #else
   HANDLE handle = FindFirstFile((datadir + base2 + "*").c_str(), &data);
 #endif
@@ -169,10 +169,10 @@ static void addAvailableLanguages(const std::string &datadir, const std::string 
     BOOL result = TRUE;
     for (; result;) {
 #if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
-		char cstr[strBufferSize];
-		size_t charsConverted;
-		wcstombs_s(&charsConverted, cstr, data.cFileName, wcslen(data.cFileName));
-      	char *name = cstr;
+      char cstr[strBufferSize];
+      size_t charsConverted;
+      wcstombs_s(&charsConverted, cstr, data.cFileName, wcslen(data.cFileName));
+      char *name = cstr;
 #else
       char *name = data.cFileName;
 #endif
