@@ -217,7 +217,7 @@ SIMDDetect::SIMDDetect() {
     if (family == ANDROID_CPU_FAMILY_ARM)
       neon_available_ = (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON);
   }
-#else
+#  elif defined(__APPLE__)
   neon_available_ = false;
 #  else
   /* Assume linux */
