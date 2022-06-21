@@ -58,7 +58,14 @@ void CCUtil::main_setup(const std::string &argv0, const std::string &basename) {
   } else if (datadir.empty() || _access(datadir.c_str(), 0) != 0) {
     /* Look for tessdata in directory of executable. */
     char path[_MAX_PATH];
+#if (defined WINAPI_FAMILY) && (WINAPI_FAMILY !=  WINAPI_FAMILY_DESKTOP_APP) /* windows but not desktop environment */
+    wchar_t w_string[_MAX_PATH];
+    DWORD length = GetModuleFileName(nullptr, w_string, sizeof(path));
+    size_t charsConverted;
+    wcstombs_s(&charsConverted, path, _MAX_PATH, w_string, _MAX_PATH);
+#else
     DWORD length = GetModuleFileName(nullptr, path, sizeof(path));
+#endif
     if (length > 0 && length < sizeof(path)) {
       char *separator = std::strrchr(path, '\\');
       if (separator != nullptr) {
