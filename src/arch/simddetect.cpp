@@ -62,6 +62,8 @@
 #  elif defined(HAVE_ELF_AUX_INFO)
 #    include <sys/auxv.h>
 #    include <sys/elf.h>
+#  elif defined(__APPLE__)
+#  else
 #  endif
 #endif
 
@@ -228,6 +230,8 @@ SIMDDetect::SIMDDetect() {
   unsigned long hwcap = 0;
   elf_aux_info(AT_HWCAP, &hwcap, sizeof hwcap);
   neon_available_ = hwcap & HWCAP_NEON;
+#  elif defined(__APPLE__)
+  neon_available_ = false;
 #  endif
 #endif
 
