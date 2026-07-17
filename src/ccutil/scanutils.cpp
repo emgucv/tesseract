@@ -28,6 +28,13 @@
 
 #include "scanutils.h"
 
+// workaround for "'off_t' was not declared in this scope" with -std=c++11
+// Debian use __off_t_defined
+// OSX has off_t defined, but HAVE_OFF_T is false...
+#if (!defined(HAVE_OFF_T)) && (!defined(_OFF_T_DECLARED)) && (!defined(__off_t_defined)) && (!__APPLE__) && (!defined(__EMSCRIPTEN_major__))
+typedef long off_t;
+#endif  // off_t
+
 enum Flags {
   FL_SPLAT = 0x01, // Drop the value, do not assign
   FL_INV = 0x02,   // Character-set with inverse
@@ -134,7 +141,7 @@ static uintmax_t streamtoumax(FILE *s, int base) {
   }
 
   ungetc(c, s);
-  return minus ? -v : v;
+  return minus ? 0 : v;
 }
 
 static double streamtofloat(FILE *s) {

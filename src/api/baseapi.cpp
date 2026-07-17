@@ -960,6 +960,8 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data, size_t size, co
                                             const char *retry_config, int timeout_millisec,
                                             TessResultRenderer *renderer,
                                             int tessedit_page_number) {
+  return false;
+/*  
   Pix *pix = nullptr;
   int page = (tessedit_page_number >= 0) ? tessedit_page_number : 0;
   size_t offset = 0;
@@ -993,6 +995,7 @@ bool TessBaseAPI::ProcessPagesMultipageTiff(const l_uint8 *data, size_t size, co
     }
   }
   return true;
+*/
 }
 
 // Master ProcessPages calls ProcessPagesInternal and then does any post-
